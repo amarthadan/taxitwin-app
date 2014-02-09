@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TaxiTwin</string>
+    <string name="action_show_options">Show options</string>
+    <string name="action_responses">Responses</string>
+    <string name="action_exit">Exit</string>
+    <string-array name="action_list">
+        <item>Map view</item>
+        <item>List view</item>
+    </string-array>
+    <string name="google_play_services_error_title">Google Play Services not found</string>
+    <string name="google_play_services_error_message">Google Play Services were not found on your device and there is nothing I can do about it.</string>
+    <string name="close">Close</string>
+    <string name="gps_alert_title">GPS not enabled</string>
+    <string name="gps_alert_message">TaxiTwin require for its run GPS module. Turn on your GPS or close the application.</string>
+    <string name="location_settings">Location settings</string>
+    <string name="internet_alert_title">No Internet connection</string>
+    <string name="internet_alert_message">TaxiTwin has to be connected to the Internet otherwise it will not work properly</string>
+    <string name="connection_settings">Connection settings</string>
+</resources>
