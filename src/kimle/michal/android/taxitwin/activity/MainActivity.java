@@ -10,6 +10,9 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -19,10 +22,21 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.SpinnerAdapter;
+import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import kimle.michal.android.taxitwin.R;
 import kimle.michal.android.taxitwin.dialog.GPSAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.GooglePlayServicesAlertDialogFragment;
@@ -30,27 +44,62 @@ import kimle.michal.android.taxitwin.dialog.GooglePlayServicesErrorDialogFragmen
 import kimle.michal.android.taxitwin.dialog.InternetAlertDialogFragment;
 import kimle.michal.android.taxitwin.fragment.TaxiTwinListFragment;
 import kimle.michal.android.taxitwin.fragment.TaxiTwinMapFragment;
+import kimle.michal.android.taxitwin.popup.SettingsPopup;
 
 public class MainActivity extends Activity implements
         GooglePlayServicesErrorDialogFragment.GooglePlayServicesErrorDialogListener,
         GPSAlertDialogFragment.GPSAlertDialogListener,
-        InternetAlertDialogFragment.InternetAlertDialogListener {
+        InternetAlertDialogFragment.InternetAlertDialogListener,
+        TaxiTwinMapFragment.MapViewListener {
 
     private static final String LOG = "MainActivity";
     private static final int MAP_VIEW_POSITION = 0;
     private static final int LIST_VIEW_POSITION = 1;
     private static final int PLAY_SERVICES_REQUEST = 9000;
     private static final int GPS_REQUEST = 10000;
+    private Location currentLocation = null;
+    private LocationManager locationManager;
+    private GoogleMap map;
+    private boolean gpsEnabled = false;
+    private TaxiTwinMapFragment mapViewFragment;
+    private TaxiTwinListFragment listViewFragment;
+    private boolean popupOpen = false;
+    private SettingsPopup settingsPopup;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        checkGooglePlayServices();
-        checkGPS();
-        checkInternet();
+        mapViewFragment = new TaxiTwinMapFragment();
+        listViewFragment = new TaxiTwinListFragment();
+        settingsPopup = new SettingsPopup(this);
 
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        try {
+            MapsInitializer.initialize(getApplicationContext());
+        } catch (GooglePlayServicesNotAvailableException ex) {
+            Log.e(LOG, ex.toString());
+        }
+
+        checkServices();
+        buildGUI();
+
+        if (currentLocation == null) {
+            addWaitForGPSSignal();
+        }
+
+        //TODO: check if there is a home address set and if not force seting it
+        Log.d(LOG, "end of onCreate");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkServices();
+    }
+
+    private void buildGUI() {
         SpinnerAdapter spinnerAdapter = ArrayAdapter.createFromResource(this, R.array.action_list,
                 android.R.layout.simple_spinner_dropdown_item);
 
@@ -68,23 +117,21 @@ public class MainActivity extends Activity implements
                     ft.hide(f);
                 }
                 if (position == LIST_VIEW_POSITION) {
-                    TaxiTwinListFragment ttlf = new TaxiTwinListFragment();
-                    ft.replace(R.id.main_fragment, ttlf, strings[position]);
+                    ft.replace(R.id.main_fragment, listViewFragment, strings[position]);
                     Log.d(LOG, "in if, position:" + position);
                 } else if (position == MAP_VIEW_POSITION) {
-                    TaxiTwinMapFragment ttmf = new TaxiTwinMapFragment();
-                    ft.replace(R.id.main_fragment, ttmf, strings[position]);
+                    ft.replace(R.id.main_fragment, mapViewFragment, strings[position]);
                     Log.d(LOG, "in else, position:" + position);
                 }
                 ft.commit();
+                fm.executePendingTransactions();
+
                 return true;
             }
         });
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setDisplayShowHomeEnabled(false);
-
-        Log.d(LOG, "end of onCreate");
     }
 
     @Override
@@ -112,6 +159,15 @@ public class MainActivity extends Activity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_show_options:
+                if (popupOpen) {
+                    item.setIcon(R.drawable.ic_action_expand);
+                    settingsPopup.dismiss();
+                    popupOpen = false;
+                } else {
+                    item.setIcon(R.drawable.ic_action_collapse);
+                    settingsPopup.showAsDropDown(getActionBarView());
+                    popupOpen = true;
+                }
                 return true;
             case R.id.action_responses:
                 return true;
@@ -121,6 +177,13 @@ public class MainActivity extends Activity implements
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private View getActionBarView() {
+        Window window = getWindow();
+        View v = window.getDecorView();
+        int resId = getResources().getIdentifier("action_bar_container", "id", "android");
+        return v.findViewById(resId);
     }
 
     private void checkGooglePlayServices() {
@@ -164,6 +227,7 @@ public class MainActivity extends Activity implements
         boolean enabled = service.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
         if (enabled) {
+            gpsEnabled = true;
             Log.d(LOG, "GPS is enabled");
         } else {
             DialogFragment alertFragment = new GPSAlertDialogFragment();
@@ -196,6 +260,84 @@ public class MainActivity extends Activity implements
         } else {
             DialogFragment alertFragment = new InternetAlertDialogFragment();
             alertFragment.show(getFragmentManager(), "internet_alert");
+        }
+    }
+
+    private void checkServices() {
+        checkGooglePlayServices();
+        checkGPS();
+        checkInternet();
+    }
+
+    private void requestLocationChanges() {
+//        LocationRequest lr = LocationRequest.create();
+//        lr.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+//        //every 20 seconds
+//        lr.setInterval(20000);
+//        //every 5 seconds top
+//        lr.setFastestInterval(5000);
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the gps location provider.
+                updateCurrentLocation(location);
+                Log.d(LOG, "onLocationChanged");
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            public void onProviderEnabled(String provider) {
+                gpsEnabled = true;
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 3, this);
+                Log.d(LOG, "onProviderEnabled");
+            }
+
+            public void onProviderDisabled(String provider) {
+                gpsEnabled = false;
+                locationManager.removeUpdates(this);
+                checkGPS();
+                Log.d(LOG, "onProviderDisabled");
+            }
+        };
+        //every 10 seconds and at least 3 meters
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 3, locationListener);
+    }
+
+    private void updateCurrentLocation(Location location) {
+        if (currentLocation == null) {
+            removeWaitForGPSSignal();
+        }
+
+        currentLocation = location;
+        LatLng currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+
+        MarkerOptions currentMarkerOptions = new MarkerOptions();
+        currentMarkerOptions.position(currentLatLng);
+        currentMarkerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.you_pin));
+        currentMarkerOptions.anchor(0.14f, 0.67f);
+        Marker currentMarker = map.addMarker(currentMarkerOptions);
+
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 8));
+        map.animateCamera(CameraUpdateFactory.zoomTo(14), 2000, null);
+    }
+
+    private void addWaitForGPSSignal() {
+        TextView bottomText = (TextView) findViewById(R.id.bottom_text);
+        bottomText.setText(R.string.waiting_for_signal);
+        bottomText.setTextColor(Color.GRAY);
+    }
+
+    private void removeWaitForGPSSignal() {
+        TextView bottomText = (TextView) findViewById(R.id.bottom_text);
+        bottomText.setText("");
+    }
+
+    public void onMapCreated() {
+        map = mapViewFragment.getMap();
+        Log.d(LOG, "map: " + map);
+
+        if (gpsEnabled) {
+            requestLocationChanges();
         }
     }
 }

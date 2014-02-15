@@ -17,4 +17,10 @@
     <string name="internet_alert_title">No Internet connection</string>
     <string name="internet_alert_message">TaxiTwin has to be connected to the Internet otherwise it will not work properly</string>
     <string name="connection_settings">Connection settings</string>
+    <string name="waiting_for_signal">Waiting for GPS signal</string>
+    <string name="address">Address</string>
+    <string name="nop">Number of passengers</string>
+    <string name="radius">Radius</string>
+    <string name="accept">Accept</string>
+    <string name="cancel">Cancel</string>
 </resources>
