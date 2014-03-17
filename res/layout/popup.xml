@@ -1,79 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:ccb="http://schemas.android.com/apk/res-auto"
               android:layout_width="match_parent"
-              android:layout_height="match_parent"
+              android:layout_height="wrap_content"
               android:orientation="vertical"
-              android:background="#ff000000">
+              android:background="#ff202020">
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0px"
+        android:layout_weight="1"
         android:orientation="horizontal">
         <TextView
             android:id="@+id/address_string"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:paddingLeft="5pt"
             android:text="@string/address"/>
-        <EditText
+        <!--        <EditText
+        android:id="@+id/address_content"
+        android:layout_width="0px"
+        android:layout_height="match_parent"
+        android:layout_weight="7"
+        android:inputType="textAutoComplete"/>-->
+        <kimle.michal.android.taxitwin.view.TaxiTwinAutoCompleteTextView
             android:id="@+id/address_content"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:inputType="text"/>
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="7"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0px"
+        android:layout_weight="1"
         android:orientation="horizontal">
         <TextView
             android:id="@+id/nop_string"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:paddingLeft="5pt"
+            android:layout_weight="2"
             android:text="@string/nop"/>
         <TextView
             android:id="@+id/nop_content"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
         <SeekBar
             android:id="@+id/nop_seekbar"
             android:max="6"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="8"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0px"
+        android:layout_weight="1"
+        android:paddingBottom="8pt"
         android:orientation="horizontal">
         <TextView
             android:id="@+id/radius_string"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:paddingLeft="5pt"
+            android:layout_weight="2"
             android:text="@string/radius"/>
         <TextView
             android:id="@+id/radius_content"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
         <SeekBar
             android:id="@+id/radius_seekbar"
-            android:max="200"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:max="199"
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="8"/>
     </LinearLayout>
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:background="@color/grey"/>
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-        <Button
+        android:layout_height="0px"
+        android:layout_weight="1"
+        android:divider="?android:dividerHorizontal"
+        android:showDividers="middle"
+        android:orientation="horizontal">
+        <!--        <Button
+        android:id="@+id/accept_button"
+        android:layout_width="0px"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:text="@string/accept"
+        android:gravity="center"
+        android:drawableStart="@drawable/ic_action_done"
+        style="?android:attr/borderlessButtonStyle" />
+            <View
+    android:layout_width="1dp"
+    android:layout_height="fill_parent"
+    android:background="@color/grey"/>
+    <Button
+        android:id="@+id/cancel_button"
+        android:layout_width="0px"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:text="@string/cancel"
+        android:gravity="center"
+        android:drawableStart="@drawable/ic_action_cancel"
+        style="?android:attr/borderlessButtonStyle" />-->
+        <com.skd.centeredcontentbutton.CenteredContentButton
             android:id="@+id/accept_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/accept"
-            android:drawableLeft="@drawable/ic_action_done"
-            style="?android:attr/borderlessButtonStyle" />
-        <Button
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            ccb:btnIconLeft="@drawable/ic_action_done"
+            ccb:btnText="@string/accept"
+            ccb:btnTextStyle="@style/btnTextStyle"
+            ccb:btnBg="@drawable/button_bg"/>
+        <com.skd.centeredcontentbutton.CenteredContentButton
             android:id="@+id/cancel_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/cancel"
-            android:drawableLeft="@drawable/ic_action_cancel"
-            style="?android:attr/borderlessButtonStyle" />
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            ccb:btnIconLeft="@drawable/ic_action_cancel"
+            ccb:btnText="@string/cancel"
+            ccb:btnTextStyle="@style/btnTextStyle"
+            ccb:btnBg="@drawable/button_bg"/>
     </LinearLayout>
 </LinearLayout>

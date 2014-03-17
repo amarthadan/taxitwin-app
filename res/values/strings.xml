@@ -23,4 +23,7 @@
     <string name="radius">Radius</string>
     <string name="accept">Accept</string>
     <string name="cancel">Cancel</string>
+    <string name="pref_address">pref_address</string>
+    <string name="pref_radius">pref_radius</string>
+    <string name="pref_passengers">pref_passengers</string>
 </resources>

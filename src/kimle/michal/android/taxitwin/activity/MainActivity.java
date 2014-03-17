@@ -25,6 +25,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.ArrayAdapter;
+import android.widget.PopupWindow.OnDismissListener;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
@@ -63,8 +64,8 @@ public class MainActivity extends Activity implements
     private boolean gpsEnabled = false;
     private TaxiTwinMapFragment mapViewFragment;
     private TaxiTwinListFragment listViewFragment;
-    private boolean popupOpen = false;
     private SettingsPopup settingsPopup;
+    private MenuItem settingsMenuItem;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -74,6 +75,12 @@ public class MainActivity extends Activity implements
         mapViewFragment = new TaxiTwinMapFragment();
         listViewFragment = new TaxiTwinListFragment();
         settingsPopup = new SettingsPopup(this);
+        settingsPopup.setOnDismissListener(new OnDismissListener() {
+
+            public void onDismiss() {
+                settingsMenuItem.setIcon(R.drawable.ic_action_expand);
+            }
+        });
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         try {
@@ -159,14 +166,17 @@ public class MainActivity extends Activity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_show_options:
-                if (popupOpen) {
+                if (settingsPopup.isShowing()) {
                     item.setIcon(R.drawable.ic_action_expand);
                     settingsPopup.dismiss();
-                    popupOpen = false;
                 } else {
                     item.setIcon(R.drawable.ic_action_collapse);
+                    settingsMenuItem = item;
                     settingsPopup.showAsDropDown(getActionBarView());
-                    popupOpen = true;
+                    //WindowManager.LayoutParams p = (WindowManager.LayoutParams) settingsPopup.getContentView().getLayoutParams();
+                    //p.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
+                    //WindowManager windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+                    //windowManager.updateViewLayout(settingsPopup.getContentView(), p);
                 }
                 return true;
             case R.id.action_responses:
