@@ -15,6 +15,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import com.skd.centeredcontentbutton.CenteredContentButton;
 import kimle.michal.android.taxitwin.R;
+import kimle.michal.android.taxitwin.adapter.TaxiTwinPlacesAutoCompleteAdapter;
 import kimle.michal.android.taxitwin.view.TaxiTwinAutoCompleteTextView;
 
 public class SettingsPopup extends PopupWindow {
@@ -35,7 +36,7 @@ public class SettingsPopup extends PopupWindow {
         ttactv.setSuperView(((Activity) context).getWindow().getDecorView());
         ttactv.setDropDownAnchor(context.getResources().getIdentifier("action_bar_container", "id", "android"));
         ttactv.setDropDownVerticalOffset(OFFSET);
-        //TODO: add adapter
+        ttactv.setAdapter(new TaxiTwinPlacesAutoCompleteAdapter(context, android.R.layout.simple_dropdown_item_1line));
         setWidth(ViewGroup.LayoutParams.MATCH_PARENT);
         setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
         setFocusable(true);
