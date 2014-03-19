@@ -1,7 +1,6 @@
 package kimle.michal.android.taxitwin.adapter;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Filter;
@@ -20,9 +19,6 @@ import com.google.api.client.util.Key;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class TaxiTwinPlacesAutoCompleteAdapter extends ArrayAdapter<String> implements Filterable {
 
@@ -53,22 +49,41 @@ public class TaxiTwinPlacesAutoCompleteAdapter extends ArrayAdapter<String> impl
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
                 FilterResults filterResults = new FilterResults();
+                resultList = new ArrayList<String>();
                 if (constraint != null) {
                     // Retrieve the autocomplete results.
-                    PlacesTask placesTask = new PlacesTask();
-                    placesTask.execute(constraint.toString());
+                    HttpRequestFactory requestFactory = HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
+                        @Override
+                        public void initialize(HttpRequest request) {
+                            request.setParser(new JsonObjectParser(JSON_FACTORY));
+                        }
+                    }
+                    );
+
+                    GenericUrl url = new GenericUrl(PLACES_API_BASE);
+                    url.put("input", constraint.toString());
+                    url.put("key", PLACES_API_KEY);
+                    url.put("sensor", false);
+
+                    HttpRequest request;
+                    HttpResponse httpResponse;
+                    PlacesResult directionsResult = null;
                     try {
-                        resultList = placesTask.get(2, TimeUnit.SECONDS);
-                    } catch (InterruptedException ex) {
-                        Log.e(LOG, ex.getMessage());
-                    } catch (ExecutionException ex) {
-                        Log.e(LOG, ex.getMessage());
-                    } catch (TimeoutException ex) {
+                        request = requestFactory.buildGetRequest(url);
+                        httpResponse = request.execute();
+                        directionsResult = httpResponse.parseAs(PlacesResult.class);
+                    } catch (IOException ex) {
                         Log.e(LOG, ex.getMessage());
                     }
 
-                    Log.d(LOG, "in performFiltering");
-                    Log.d(LOG, "resultList: " + resultList);
+                    Log.d(LOG, "directionsResult: " + directionsResult);
+                    if (directionsResult != null) {
+                        List<Prediction> predictions = directionsResult.predictions;
+                        Log.d(LOG, "predictions: " + predictions);
+                        for (Prediction prediction : predictions) {
+                            resultList.add(prediction.description);
+                        }
+                    }
                     // Assign the data to the FilterResults
                     filterResults.values = resultList;
                     filterResults.count = resultList.size();
@@ -88,62 +103,17 @@ public class TaxiTwinPlacesAutoCompleteAdapter extends ArrayAdapter<String> impl
         return filter;
     }
 
-    private class PlacesTask extends AsyncTask<String, Void, ArrayList<String>> {
-
-        @Override
-        protected ArrayList<String> doInBackground(String... input) {
-            ArrayList<String> resultList = new ArrayList<String>();
-
-            HttpRequestFactory requestFactory = HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
-                @Override
-                public void initialize(HttpRequest request) {
-                    request.setParser(new JsonObjectParser(JSON_FACTORY));
-                }
-            }
-            );
-
-            GenericUrl url = new GenericUrl(PLACES_API_BASE);
-            url.put("input", input[0]);
-            url.put("key", PLACES_API_KEY);
-            url.put("sensor", false);
-
-            HttpRequest request;
-            HttpResponse httpResponse;
-            PlacesResult directionsResult = null;
-            try {
-                request = requestFactory.buildGetRequest(url);
-                httpResponse = request.execute();
-                directionsResult = httpResponse.parseAs(PlacesResult.class);
-            } catch (IOException ex) {
-                Log.e(LOG, ex.getMessage());
-            }
-
-            Log.d(LOG, "directionsResult: " + directionsResult);
-            if (directionsResult != null) {
-                List<Prediction> predictions = directionsResult.predictions;
-                Log.d(LOG, "predictions: " + predictions);
-                for (Prediction prediction : predictions) {
-                    resultList.add(prediction.description);
-                }
-            }
-            return resultList;
-        }
-    }
-
     public static class PlacesResult {
 
         @Key("predictions")
         public List<Prediction> predictions;
-
     }
 
     public static class Prediction {
 
         @Key("description")
         public String description;
-
         @Key("id")
         public String id;
-
     }
 }

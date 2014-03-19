@@ -1,21 +1,41 @@
 package kimle.michal.android.taxitwin.popup;
 
 import android.app.Activity;
+import android.app.DialogFragment;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.json.jackson.JacksonFactory;
+import com.google.api.client.util.Key;
 import com.skd.centeredcontentbutton.CenteredContentButton;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import kimle.michal.android.taxitwin.R;
 import kimle.michal.android.taxitwin.adapter.TaxiTwinPlacesAutoCompleteAdapter;
+import kimle.michal.android.taxitwin.dialog.PlaceErrorDialogFragment;
+import kimle.michal.android.taxitwin.entity.Place;
 import kimle.michal.android.taxitwin.view.TaxiTwinAutoCompleteTextView;
 
 public class SettingsPopup extends PopupWindow {
@@ -25,6 +45,12 @@ public class SettingsPopup extends PopupWindow {
     public static final int OFFSET = 32;
     private final Context context;
     private final View popupView;
+    private static final HttpTransport HTTP_TRANSPORT = AndroidHttp.newCompatibleTransport();
+    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+    public static final String GEOCODE_API_BASE = "https://maps.googleapis.com/maps/api/geocode/json";
+    public static final String GEOCODE_API_KEY = "AIzaSyAD5dc-7yTVvWhKFRQ-OC48dPlLnAvy5hU";
+    private static final String LOG = "SettingsPopup";
+    private static final String STATUS_OK = "OK";
 
     public SettingsPopup(Context context) {
         super(context);
@@ -47,6 +73,18 @@ public class SettingsPopup extends PopupWindow {
         createListeners();
     }
 
+    @Override
+    public void showAsDropDown(View v) {
+        super.showAsDropDown(v);
+        loadPreferences();
+    }
+
+    @Override
+    public void dismiss() {
+        super.dismiss();
+        loadPreferences();
+    }
+
     private void createDefaultPreferences() {
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = pref.edit();
@@ -61,8 +99,10 @@ public class SettingsPopup extends PopupWindow {
 
     private void loadPreferences() {
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
-        EditText addressContent = (EditText) popupView.findViewById(R.id.address_content);
+        TaxiTwinAutoCompleteTextView addressContent = (TaxiTwinAutoCompleteTextView) popupView.findViewById(R.id.address_content);
         addressContent.setText(pref.getString(context.getResources().getString(R.string.pref_address), null));
+        addressContent.dismissDropDown();
+        //addressContent.setText("");
         TextView passengersContent = (TextView) popupView.findViewById(R.id.nop_content);
         passengersContent.setText(String.valueOf(pref.getInt(context.getResources().getString(R.string.pref_passengers), DEFAULT_PASSENGERS)));
         SeekBar passengersSeekBar = (SeekBar) popupView.findViewById(R.id.nop_seekbar);
@@ -79,7 +119,6 @@ public class SettingsPopup extends PopupWindow {
             @Override
             public void onClick(View v) {
                 dismiss();
-                loadPreferences();
             }
         });
 
@@ -120,8 +159,34 @@ public class SettingsPopup extends PopupWindow {
                 SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
                 SharedPreferences.Editor editor = pref.edit();
 
-                EditText addressContent = (EditText) popupView.findViewById(R.id.address_content);
-                editor.putString(context.getResources().getString(R.string.pref_address), addressContent.getText().toString());
+                TaxiTwinAutoCompleteTextView addressContent = (TaxiTwinAutoCompleteTextView) popupView.findViewById(R.id.address_content);
+                String rawAddress = addressContent.getText().toString();
+
+                GeocodeTask task = new GeocodeTask();
+                task.execute(rawAddress);
+                Place place = null;
+                try {
+                    place = task.get(2, TimeUnit.SECONDS);
+                } catch (InterruptedException ex) {
+                    Log.e(LOG, ex.getMessage());
+                } catch (ExecutionException ex) {
+                    Log.e(LOG, ex.getMessage());
+                } catch (TimeoutException ex) {
+                    Log.e(LOG, ex.getMessage());
+                }
+
+                if (place == null) {
+                    DialogFragment errorFragment = new PlaceErrorDialogFragment();
+                    errorFragment.show(((Activity) context).getFragmentManager(), "place_error");
+
+                    return;
+                }
+
+                Log.d(LOG, "place: " + place);
+
+                editor.putString(context.getResources().getString(R.string.pref_address), place.getAddress());
+                editor.putLong(context.getResources().getString(R.string.pref_address_long), place.getLongitude());
+                editor.putLong(context.getResources().getString(R.string.pref_address_lat), place.getLatitude());
                 SeekBar passengersSeekBar = (SeekBar) popupView.findViewById(R.id.nop_seekbar);
                 editor.putInt(context.getResources().getString(R.string.pref_passengers), passengersSeekBar.getProgress() + 1);
                 SeekBar radiusSeekBar = (SeekBar) popupView.findViewById(R.id.radius_seekbar);
@@ -132,5 +197,79 @@ public class SettingsPopup extends PopupWindow {
                 dismiss();
             }
         });
+    }
+
+    private class GeocodeTask extends AsyncTask<String, Void, Place> {
+
+        @Override
+        protected Place doInBackground(String... input) {
+            Place result = null;
+
+            HttpRequestFactory requestFactory = HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
+                @Override
+                public void initialize(HttpRequest request) {
+                    request.setParser(new JsonObjectParser(JSON_FACTORY));
+                }
+            }
+            );
+
+            GenericUrl url = new GenericUrl(GEOCODE_API_BASE);
+            url.put("address", input[0]);
+            url.put("key", GEOCODE_API_KEY);
+            url.put("sensor", false);
+
+            HttpRequest request;
+            HttpResponse httpResponse;
+            GeocodeResult geocodeResult;
+            try {
+                request = requestFactory.buildGetRequest(url);
+                httpResponse = request.execute();
+                geocodeResult = httpResponse.parseAs(GeocodeResult.class);
+
+                if (!geocodeResult.status.equals(STATUS_OK)) {
+                    Log.e(LOG, "status: " + geocodeResult.status);
+                    return result;
+                }
+
+                Log.d(LOG, "results: " + geocodeResult.results.get(0).geometry);
+                //return null;
+                Result firstResult = geocodeResult.results.get(0);
+                result = new Place(firstResult.address, firstResult.geometry.location.latitude, firstResult.geometry.location.longitude);
+
+            } catch (IOException ex) {
+                Log.e(LOG, ex.getMessage());
+            }
+            return result;
+        }
+    }
+
+    public static class GeocodeResult {
+
+        @Key("results")
+        public List<Result> results;
+        @Key("status")
+        public String status;
+    }
+
+    public static class Result {
+
+        @Key("formatted_address")
+        public String address;
+        @Key("geometry")
+        public Geometry geometry;
+    }
+
+    public static class Geometry {
+
+        @Key("location")
+        public Location location;
+    }
+
+    public static class Location {
+
+        @Key("lat")
+        public Long latitude;
+        @Key("lng")
+        public Long longitude;
     }
 }

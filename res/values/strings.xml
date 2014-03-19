@@ -24,6 +24,10 @@
     <string name="accept">Accept</string>
     <string name="cancel">Cancel</string>
     <string name="pref_address">pref_address</string>
+    <string name="pref_address_long">pref_address_long</string>
+    <string name="pref_address_lat">pref_address_lat</string>
     <string name="pref_radius">pref_radius</string>
     <string name="pref_passengers">pref_passengers</string>
+    <string name="place_error_title">Address not found</string>
+    <string name="place_error_message">Address that you provided cannot be found. Please choose one of the choices from the list.</string>
 </resources>
