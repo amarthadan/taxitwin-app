@@ -1,4 +1,4 @@
-package kimle.michal.android.taxitwin.dialog;
+package kimle.michal.android.taxitwin.dialog.alert;
 
 import android.app.Dialog;
 import android.app.DialogFragment;

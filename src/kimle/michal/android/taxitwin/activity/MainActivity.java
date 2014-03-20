@@ -39,10 +39,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import kimle.michal.android.taxitwin.R;
-import kimle.michal.android.taxitwin.dialog.GPSAlertDialogFragment;
-import kimle.michal.android.taxitwin.dialog.GooglePlayServicesAlertDialogFragment;
-import kimle.michal.android.taxitwin.dialog.GooglePlayServicesErrorDialogFragment;
-import kimle.michal.android.taxitwin.dialog.InternetAlertDialogFragment;
+import kimle.michal.android.taxitwin.dialog.alert.GPSAlertDialogFragment;
+import kimle.michal.android.taxitwin.dialog.alert.GooglePlayServicesAlertDialogFragment;
+import kimle.michal.android.taxitwin.dialog.alert.InternetAlertDialogFragment;
+import kimle.michal.android.taxitwin.dialog.error.GooglePlayServicesErrorDialogFragment;
 import kimle.michal.android.taxitwin.fragment.TaxiTwinListFragment;
 import kimle.michal.android.taxitwin.fragment.TaxiTwinMapFragment;
 import kimle.michal.android.taxitwin.popup.SettingsPopup;
@@ -96,7 +96,7 @@ public class MainActivity extends Activity implements
             addWaitForGPSSignal();
         }
 
-        //TODO: check if there is a home address set and if not force seting it
+        //TODO: if everything is ok send request to server
         Log.d(LOG, "end of onCreate");
     }
 
@@ -159,6 +159,11 @@ public class MainActivity extends Activity implements
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
+        settingsMenuItem = menu.findItem(R.id.action_show_options);
+        if (!settingsPopup.hasAddress()) {
+            settingsMenuItem.setIcon(R.drawable.ic_action_collapse);
+            settingsPopup.showAsDropDown(getActionBarView());
+        }
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -167,11 +172,10 @@ public class MainActivity extends Activity implements
         switch (item.getItemId()) {
             case R.id.action_show_options:
                 if (settingsPopup.isShowing()) {
-                    item.setIcon(R.drawable.ic_action_expand);
+                    settingsMenuItem.setIcon(R.drawable.ic_action_expand);
                     settingsPopup.dismiss();
                 } else {
-                    item.setIcon(R.drawable.ic_action_collapse);
-                    settingsMenuItem = item;
+                    settingsMenuItem.setIcon(R.drawable.ic_action_collapse);
                     settingsPopup.showAsDropDown(getActionBarView());
                     //WindowManager.LayoutParams p = (WindowManager.LayoutParams) settingsPopup.getContentView().getLayoutParams();
                     //p.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;

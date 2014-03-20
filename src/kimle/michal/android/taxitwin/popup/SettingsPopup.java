@@ -34,7 +34,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import kimle.michal.android.taxitwin.R;
 import kimle.michal.android.taxitwin.adapter.TaxiTwinPlacesAutoCompleteAdapter;
-import kimle.michal.android.taxitwin.dialog.PlaceErrorDialogFragment;
+import kimle.michal.android.taxitwin.dialog.alert.AddressAlertDialogFragment;
+import kimle.michal.android.taxitwin.dialog.error.PlaceErrorDialogFragment;
 import kimle.michal.android.taxitwin.entity.Place;
 import kimle.michal.android.taxitwin.view.TaxiTwinAutoCompleteTextView;
 
@@ -67,6 +68,8 @@ public class SettingsPopup extends PopupWindow {
         setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
         setFocusable(true);
         setTouchable(true);
+        //setBackgroundDrawable(null);
+        setOutsideTouchable(false);
 
         createDefaultPreferences();
         loadPreferences();
@@ -82,6 +85,11 @@ public class SettingsPopup extends PopupWindow {
     @Override
     public void dismiss() {
         super.dismiss();
+        if (!hasAddress()) {
+            Log.d(LOG, "in dismiss");
+            DialogFragment errorFragment = new AddressAlertDialogFragment();
+            errorFragment.show(((Activity) context).getFragmentManager(), "address_alert");
+        }
         loadPreferences();
     }
 
@@ -102,7 +110,7 @@ public class SettingsPopup extends PopupWindow {
         TaxiTwinAutoCompleteTextView addressContent = (TaxiTwinAutoCompleteTextView) popupView.findViewById(R.id.address_content);
         addressContent.setText(pref.getString(context.getResources().getString(R.string.pref_address), null));
         addressContent.dismissDropDown();
-        //addressContent.setText("");
+        addressContent.setText("");
         TextView passengersContent = (TextView) popupView.findViewById(R.id.nop_content);
         passengersContent.setText(String.valueOf(pref.getInt(context.getResources().getString(R.string.pref_passengers), DEFAULT_PASSENGERS)));
         SeekBar passengersSeekBar = (SeekBar) popupView.findViewById(R.id.nop_seekbar);
@@ -197,6 +205,13 @@ public class SettingsPopup extends PopupWindow {
                 dismiss();
             }
         });
+    }
+
+    public boolean hasAddress() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+        String address = pref.getString(context.getResources().getString(R.string.pref_address), null);
+
+        return address != null;
     }
 
     private class GeocodeTask extends AsyncTask<String, Void, Place> {
