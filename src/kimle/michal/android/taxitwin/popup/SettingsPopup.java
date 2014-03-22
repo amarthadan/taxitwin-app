@@ -110,7 +110,7 @@ public class SettingsPopup extends PopupWindow {
         TaxiTwinAutoCompleteTextView addressContent = (TaxiTwinAutoCompleteTextView) popupView.findViewById(R.id.address_content);
         addressContent.setText(pref.getString(context.getResources().getString(R.string.pref_address), null));
         addressContent.dismissDropDown();
-        addressContent.setText("");
+        //addressContent.setText("");
         TextView passengersContent = (TextView) popupView.findViewById(R.id.nop_content);
         passengersContent.setText(String.valueOf(pref.getInt(context.getResources().getString(R.string.pref_passengers), DEFAULT_PASSENGERS)));
         SeekBar passengersSeekBar = (SeekBar) popupView.findViewById(R.id.nop_seekbar);
@@ -193,8 +193,8 @@ public class SettingsPopup extends PopupWindow {
                 Log.d(LOG, "place: " + place);
 
                 editor.putString(context.getResources().getString(R.string.pref_address), place.getAddress());
-                editor.putLong(context.getResources().getString(R.string.pref_address_long), place.getLongitude());
-                editor.putLong(context.getResources().getString(R.string.pref_address_lat), place.getLatitude());
+                editor.putFloat(context.getResources().getString(R.string.pref_address_long), place.getLongitude().floatValue());
+                editor.putFloat(context.getResources().getString(R.string.pref_address_lat), place.getLatitude().floatValue());
                 SeekBar passengersSeekBar = (SeekBar) popupView.findViewById(R.id.nop_seekbar);
                 editor.putInt(context.getResources().getString(R.string.pref_passengers), passengersSeekBar.getProgress() + 1);
                 SeekBar radiusSeekBar = (SeekBar) popupView.findViewById(R.id.radius_seekbar);
@@ -283,8 +283,8 @@ public class SettingsPopup extends PopupWindow {
     public static class Location {
 
         @Key("lat")
-        public Long latitude;
+        public Double latitude;
         @Key("lng")
-        public Long longitude;
+        public Double longitude;
     }
 }

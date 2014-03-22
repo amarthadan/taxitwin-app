@@ -32,4 +32,5 @@
     <string name="place_error_message">Address that you provided cannot be found. Please choose one of the choices from the list.</string>
     <string name="address_alert_title">Address not filled</string>
     <string name="address_alert_message">You did not provide your home address. Application cannot create or search TaxiTwin offers without this information.</string>
+    <string name="pref_gcm_id">pref_gcm_id</string>
 </resources>

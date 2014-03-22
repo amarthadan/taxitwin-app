@@ -45,6 +45,7 @@ import kimle.michal.android.taxitwin.dialog.alert.InternetAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.error.GooglePlayServicesErrorDialogFragment;
 import kimle.michal.android.taxitwin.fragment.TaxiTwinListFragment;
 import kimle.michal.android.taxitwin.fragment.TaxiTwinMapFragment;
+import kimle.michal.android.taxitwin.gcm.GcmHandler;
 import kimle.michal.android.taxitwin.popup.SettingsPopup;
 
 public class MainActivity extends Activity implements
@@ -66,6 +67,7 @@ public class MainActivity extends Activity implements
     private TaxiTwinListFragment listViewFragment;
     private SettingsPopup settingsPopup;
     private MenuItem settingsMenuItem;
+    private GcmHandler gcmHandler;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -89,14 +91,14 @@ public class MainActivity extends Activity implements
             Log.e(LOG, ex.toString());
         }
 
-        checkServices();
         buildGUI();
 
         if (currentLocation == null) {
             addWaitForGPSSignal();
         }
 
-        //TODO: if everything is ok send request to server
+        gcmHandler = new GcmHandler(this);
+
         Log.d(LOG, "end of onCreate");
     }
 
@@ -153,6 +155,8 @@ public class MainActivity extends Activity implements
                 checkGPS();
                 break;
         }
+
+        checkServices();
     }
 
     @Override
@@ -200,14 +204,7 @@ public class MainActivity extends Activity implements
         return v.findViewById(resId);
     }
 
-    private void checkGooglePlayServices() {
-        if (!googlePlayServicesAvailable()) {
-            DialogFragment errorFragment = new GooglePlayServicesErrorDialogFragment();
-            errorFragment.show(getFragmentManager(), "google_play_services_error");
-        }
-    }
-
-    private boolean googlePlayServicesAvailable() {
+    private boolean checkGooglePlayServices() {
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
         if (ConnectionResult.SUCCESS == resultCode) {
             Log.d(LOG, "Google Play services is available");
@@ -224,6 +221,8 @@ public class MainActivity extends Activity implements
                     alertFragment.show(getFragmentManager(), "Google Play Services alert");
                 }
             }
+            DialogFragment errorFragment = new GooglePlayServicesErrorDialogFragment();
+            errorFragment.show(getFragmentManager(), "google_play_services_error");
             return false;
         }
     }
@@ -236,16 +235,18 @@ public class MainActivity extends Activity implements
         android.os.Process.killProcess(android.os.Process.myPid());
     }
 
-    private void checkGPS() {
+    private boolean checkGPS() {
         LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
         boolean enabled = service.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
         if (enabled) {
             gpsEnabled = true;
             Log.d(LOG, "GPS is enabled");
+            return true;
         } else {
             DialogFragment alertFragment = new GPSAlertDialogFragment();
             alertFragment.show(getFragmentManager(), "gps_alert");
+            return false;
         }
     }
 
@@ -264,23 +265,23 @@ public class MainActivity extends Activity implements
         exit();
     }
 
-    private void checkInternet() {
+    private boolean checkInternet() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
 
         if (isConnected) {
             Log.d(LOG, "connected to the Internet");
+            return true;
         } else {
             DialogFragment alertFragment = new InternetAlertDialogFragment();
             alertFragment.show(getFragmentManager(), "internet_alert");
+            return false;
         }
     }
 
     private void checkServices() {
-        checkGooglePlayServices();
-        checkGPS();
-        checkInternet();
+        gcmHandler.setGoodToGo(checkGooglePlayServices() && checkGPS() && checkInternet());
     }
 
     private void requestLocationChanges() {
@@ -309,7 +310,7 @@ public class MainActivity extends Activity implements
             public void onProviderDisabled(String provider) {
                 gpsEnabled = false;
                 locationManager.removeUpdates(this);
-                checkGPS();
+                checkServices();
                 Log.d(LOG, "onProviderDisabled");
             }
         };
@@ -333,6 +334,8 @@ public class MainActivity extends Activity implements
 
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 8));
         map.animateCamera(CameraUpdateFactory.zoomTo(14), 2000, null);
+
+        gcmHandler.locationChanged(currentLocation);
     }
 
     private void addWaitForGPSSignal() {

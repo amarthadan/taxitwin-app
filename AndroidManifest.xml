@@ -8,6 +8,8 @@
     <permission
         android:name="kimle.michal.android.taxitwin.permission.MAPS_RECEIVE"
         android:protectionLevel="signature" />
+    <permission android:name="kimle.michal.android.gcm.permission.C2D_MESSAGE"
+                android:protectionLevel="signature" />
 
     <uses-feature
         android:glEsVersion="0x00020000"
@@ -19,7 +21,12 @@
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <application android:label="@string/app_name" android:icon="@drawable/ic_launcher">
+    <!--    <uses-permission android:name="android.permission.READ_PROFILE"/>
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>-->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <uses-permission android:name="kimle.michal.android.gcm.permission.C2D_MESSAGE" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <application android:label="@string/app_name" android:icon="@drawable/ic_launcher" android:allowBackup="false">
         <activity android:name=".activity.MainActivity"
                   android:label="@string/app_name">
             <intent-filter>
