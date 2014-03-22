@@ -22,6 +22,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     public static final String GCM_DATA_RADIUS = "radius";
     public static final String GCM_DATA_NAME = "name";
     public static final String GCM_DATA_PASSENGERS = "passengers";
+    public static final String GCM_DATA_TAXITWIN_ID = "taxitwin_id";
     public static final String GCM_DATA_TYPE_SUBSCRIBE = "subscribe";
     public static final String GCM_DATA_TYPE_MODIFY = "modify";
     private static final String LOG = "GcmHandler";
@@ -33,6 +34,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     private final Context context;
     private boolean goodToGo;
     private final GcmConnector gcmConnector;
+    private Long taxiTwinId;
 
     public GcmHandler(Context context) {
         this.context = context;
@@ -41,6 +43,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         loadPreferences();
         goodToGo = false;
         gcmConnector = new GcmConnector(context);
+        getTaxiTwinId();
     }
 
     public void setGoodToGo(boolean status) {
@@ -101,6 +104,8 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
 
         gcmConnector.send(data);
         subscribed = true;
+
+        Log.d(LOG, "sending subscribe...");
     }
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
@@ -152,9 +157,12 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         }
 
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_MODIFY);
-        //add taxitwin id to data
-        //send it
-        //TODO
+        if (taxiTwinId == null) {
+            getTaxiTwinId();
+        }
+        data.putLong(GCM_DATA_TAXITWIN_ID, taxiTwinId);
+        gcmConnector.send(data);
+
         Log.d(LOG, "sending changes...");
     }
 //
@@ -180,5 +188,16 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
 
         Log.w(LOG, "no name was found");
         return "";
+    }
+
+    private void getTaxiTwinId() {
+        /**
+         * **TESTING***
+         */
+        taxiTwinId = 5l;
+        /**
+         * **TESTING***
+         */
+        //TODO - fetch db for your own taxitwin id
     }
 }
