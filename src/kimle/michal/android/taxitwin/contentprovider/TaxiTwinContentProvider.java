@@ -1,15 +1,53 @@
 package kimle.michal.android.taxitwin.contentprovider;
 
 import android.content.ContentProvider;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import java.util.Arrays;
+import java.util.HashSet;
+import kimle.michal.android.taxitwin.db.DbContract;
+import kimle.michal.android.taxitwin.db.DbHelper;
 
 public class TaxiTwinContentProvider extends ContentProvider {
 
+    private DbHelper dbHelper;
+    private SQLiteDatabase db;
+    private static final String AUTHORITY = "kimle.michal.android.taxitwin.contentprovider";
+    private static final int TAXITWINS = 10;
+    private static final int POINTS = 11;
+    private static final int OFFERS = 12;
+    private static final int RESPONSES = 13;
+    private static final int RIDES = 14;
+    private static final String TAXITWINS_PATH = "taxitwins";
+    private static final String POINTS_PATH = "points";
+    private static final String OFFERS_PATH = "offers";
+    private static final String RESPONSES_PATH = "responses";
+    private static final String RIDES_PATH = "rides";
+    public static final Uri TAXITWINS_URI = Uri.parse("content://" + AUTHORITY + "/" + TAXITWINS_PATH);
+    public static final Uri POINTS_URI = Uri.parse("content://" + AUTHORITY + "/" + POINTS_PATH);
+    public static final Uri OFFERS_URI = Uri.parse("content://" + AUTHORITY + "/" + OFFERS_PATH);
+    public static final Uri RESPONSES_URI = Uri.parse("content://" + AUTHORITY + "/" + RESPONSES_PATH);
+    public static final Uri RIDES_URI = Uri.parse("content://" + AUTHORITY + "/" + RIDES_PATH);
+    private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+    private static final String VND = "vnd.kimle.michal.android.taxitwin.contentprovider";
+
+    static {
+        sURIMatcher.addURI(AUTHORITY, TAXITWINS_PATH, TAXITWINS);
+        sURIMatcher.addURI(AUTHORITY, POINTS_PATH, POINTS);
+        sURIMatcher.addURI(AUTHORITY, OFFERS_PATH, OFFERS);
+        sURIMatcher.addURI(AUTHORITY, RESPONSES_PATH, RESPONSES);
+        sURIMatcher.addURI(AUTHORITY, RIDES_PATH, RIDES);
+    }
+
     @Override
     public boolean onCreate() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        dbHelper = new DbHelper(getContext());
+        return true;
     }
 
     @Override
@@ -19,12 +57,49 @@ public class TaxiTwinContentProvider extends ContentProvider {
 
     @Override
     public String getType(Uri uri) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        int uriType = sURIMatcher.match(uri);
+        switch (uriType) {
+            case TAXITWINS:
+                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + VND + "." + TAXITWINS_PATH;
+            case POINTS:
+                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + VND + "." + POINTS_PATH;
+            case OFFERS:
+                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + VND + "." + OFFERS_PATH;
+            case RESPONSES:
+                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + VND + "." + RESPONSES_PATH;
+            case RIDES:
+                return ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + VND + "." + RIDES_PATH;
+            default:
+                return null;
+        }
     }
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        int uriType = sURIMatcher.match(uri);
+        db = dbHelper.getWritableDatabase();
+        long id;
+        switch (uriType) {
+            case TAXITWINS:
+                id = db.insert(DbContract.DbEntry.TAXITWIN_TABLE, null, values);
+                break;
+            case POINTS:
+                id = db.insert(DbContract.DbEntry.POINT_TABLE, null, values);
+                break;
+            case OFFERS:
+                id = db.insert(DbContract.DbEntry.OFFER_TABLE, null, values);
+                break;
+            case RESPONSES:
+                id = db.insert(DbContract.DbEntry.RESPONSE_TABLE, null, values);
+                break;
+            case RIDES:
+                id = db.insert(DbContract.DbEntry.RIDE_TABLE, null, values);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown URI: " + uri);
+        }
+        getContext().getContentResolver().notifyChange(uri, null);
+        return ContentUris.withAppendedId(uri, id);
     }
 
     @Override
@@ -35,5 +110,34 @@ public class TaxiTwinContentProvider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private void checkColumns(String[] projection) {
+        String[] available = {
+            DbContract.DbEntry._ID,
+            DbContract.DbEntry.OFFER_ID_COLUMN,
+            DbContract.DbEntry.OFFER_PASSENGERS_COLUMN,
+            DbContract.DbEntry.OFFER_PASSENGERS_TOTAL_COLUMN,
+            DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN,
+            DbContract.DbEntry.POINT_ID_COLUMN,
+            DbContract.DbEntry.POINT_LATITUDE_COLUMN,
+            DbContract.DbEntry.POINT_LONGITUDE_COLUMN,
+            DbContract.DbEntry.POINT_TEXTUAL_COLUMN,
+            DbContract.DbEntry.RESPONSE_ID_COLUMN,
+            DbContract.DbEntry.RESPONSE_TAXITWIN_ID_COLUMN,
+            DbContract.DbEntry.RIDE_ID_COLUMN,
+            DbContract.DbEntry.RIDE_OFFER_ID_COLUMN,
+            DbContract.DbEntry.TAXITWIN_END_POINT_ID_COLUMN,
+            DbContract.DbEntry.TAXITWIN_ID_COLUMN,
+            DbContract.DbEntry.TAXITWIN_NAME_COLUMN,
+            DbContract.DbEntry.TAXITWIN_START_POINT_ID_COLUMN
+        };
+        if (projection != null) {
+            HashSet<String> requestedColumns = new HashSet<String>(Arrays.asList(projection));
+            HashSet<String> availableColumns = new HashSet<String>(Arrays.asList(available));
+            if (!availableColumns.containsAll(requestedColumns)) {
+                throw new IllegalArgumentException("Unknown columns in projection");
+            }
+        }
     }
 }
