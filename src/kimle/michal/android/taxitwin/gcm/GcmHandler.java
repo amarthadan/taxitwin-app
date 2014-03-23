@@ -34,7 +34,6 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     private final Context context;
     private boolean goodToGo;
     private final GcmConnector gcmConnector;
-    private Long taxiTwinId;
 
     public GcmHandler(Context context) {
         this.context = context;
@@ -43,7 +42,6 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         loadPreferences();
         goodToGo = false;
         gcmConnector = new GcmConnector(context);
-        getTaxiTwinId();
     }
 
     public void setGoodToGo(boolean status) {
@@ -76,8 +74,8 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         }
 
         Bundle data = new Bundle();
-        data.putDouble(GCM_DATA_START_LATITUDE, current.getLatitude());
-        data.putDouble(GCM_DATA_START_LONGITUDE, current.getLongitude());
+        data.putString(GCM_DATA_START_LATITUDE, current.getLatitude().toString());
+        data.putString(GCM_DATA_START_LONGITUDE, current.getLongitude().toString());
         sendChangedOffer(data);
     }
 
@@ -94,12 +92,12 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
 
         Bundle data = new Bundle();
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_SUBSCRIBE);
-        data.putDouble(GCM_DATA_START_LATITUDE, current.getLatitude());
-        data.putDouble(GCM_DATA_START_LONGITUDE, current.getLongitude());
-        data.putDouble(GCM_DATA_END_LATITUDE, destination.getLatitude());
-        data.putDouble(GCM_DATA_END_LONGITUDE, destination.getLongitude());
-        data.putInt(GCM_DATA_PASSENGERS, passengers);
-        data.putInt(GCM_DATA_RADIUS, radius);
+        data.putString(GCM_DATA_START_LATITUDE, current.getLatitude().toString());
+        data.putString(GCM_DATA_START_LONGITUDE, current.getLongitude().toString());
+        data.putString(GCM_DATA_END_LATITUDE, destination.getLatitude().toString());
+        data.putString(GCM_DATA_END_LONGITUDE, destination.getLongitude().toString());
+        data.putString(GCM_DATA_PASSENGERS, String.valueOf(passengers));
+        data.putString(GCM_DATA_RADIUS, String.valueOf(radius));
         data.putString(GCM_DATA_NAME, getUserName());
 
         gcmConnector.send(data);
@@ -119,8 +117,8 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
             destination.setLongitude(Double.valueOf(sharedPreferences.getFloat(context.getResources().getString(R.string.pref_address_long), destination.getLongitude().floatValue())));
 
             Bundle data = new Bundle();
-            data.putDouble(GCM_DATA_END_LATITUDE, destination.getLatitude());
-            data.putDouble(GCM_DATA_END_LONGITUDE, destination.getLongitude());
+            data.putString(GCM_DATA_END_LATITUDE, destination.getLatitude().toString());
+            data.putString(GCM_DATA_END_LONGITUDE, destination.getLongitude().toString());
 
             sendChangedOffer(data);
             return;
@@ -130,7 +128,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
             passengers = sharedPreferences.getInt(key, passengers);
 
             Bundle data = new Bundle();
-            data.putInt(GCM_DATA_PASSENGERS, passengers);
+            data.putString(GCM_DATA_PASSENGERS, String.valueOf(passengers));
 
             sendChangedOffer(data);
             return;
@@ -140,7 +138,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
             radius = sharedPreferences.getInt(key, radius);
 
             Bundle data = new Bundle();
-            data.putInt(GCM_DATA_RADIUS, radius);
+            data.putString(GCM_DATA_RADIUS, String.valueOf(radius));
 
             sendChangedOffer(data);
         }
@@ -157,10 +155,6 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         }
 
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_MODIFY);
-        if (taxiTwinId == null) {
-            getTaxiTwinId();
-        }
-        data.putLong(GCM_DATA_TAXITWIN_ID, taxiTwinId);
         gcmConnector.send(data);
 
         Log.d(LOG, "sending changes...");
@@ -188,16 +182,6 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
 
         Log.w(LOG, "no name was found");
         return "";
-    }
-
-    private void getTaxiTwinId() {
-        /**
-         * **TESTING***
-         */
-        taxiTwinId = 5l;
-        /**
-         * **TESTING***
-         */
-        //TODO - fetch db for your own taxitwin id
+        //FIXME giving email not name
     }
 }

@@ -18,7 +18,7 @@ public class GcmConnector {
     private static final String SENDER_ID = "275458664476";
     private static final String GCM_SERVER = "@gcm.googleapis.com";
     private static final String LOG = "GcmConnector";
-    private AtomicInteger messageId = new AtomicInteger();
+    private final AtomicInteger messageId = new AtomicInteger();
 
     public GcmConnector(Context context) {
         this.context = context;
@@ -36,7 +36,9 @@ public class GcmConnector {
     private boolean isRegistred() {
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
         String gcmId = pref.getString(context.getResources().getString(R.string.pref_gcm_id), "");
+        Log.d(LOG, "gcmId: " + gcmId);
         return !gcmId.isEmpty();
+        //return false;
     }
 
     private void register() {
@@ -45,7 +47,7 @@ public class GcmConnector {
             protected Void doInBackground(Void... params) {
                 try {
                     String regid = gcm.register(SENDER_ID);
-
+                    Log.d(LOG, "regid: " + regid);
                     SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
                     SharedPreferences.Editor editor = pref.edit();
                     editor.putString(context.getResources().getString(R.string.pref_gcm_id), regid);
