@@ -40,7 +40,7 @@ public class Place {
     }
 
     public boolean isFilled() {
-        return (latitude != null && longitude != null);
+        return !(latitude == null || longitude == null || latitude == 0 || longitude == 0);
     }
 
     @Override

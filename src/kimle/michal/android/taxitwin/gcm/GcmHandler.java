@@ -108,7 +108,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         gcmConnector.send(data);
         subscribed = true;
 
-        Log.d(LOG, "sending subscribe...");
+        Log.d(LOG, "sending subscribe: " + data);
     }
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
@@ -162,7 +162,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_MODIFY);
         gcmConnector.send(data);
 
-        Log.d(LOG, "sending changes...");
+        Log.d(LOG, "sending changes: " + data);
     }
 //
 //    private String getDeviceId() {

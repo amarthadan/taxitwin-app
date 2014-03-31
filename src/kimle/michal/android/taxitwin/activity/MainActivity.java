@@ -5,7 +5,6 @@ import android.app.ActionBar.OnNavigationListener;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
@@ -29,7 +28,6 @@ import android.widget.PopupWindow.OnDismissListener;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -68,14 +66,13 @@ public class MainActivity extends Activity implements
     private SettingsPopup settingsPopup;
     private MenuItem settingsMenuItem;
     private GcmHandler gcmHandler;
+    private Marker currentMarker;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        mapViewFragment = new TaxiTwinMapFragment();
-        listViewFragment = new TaxiTwinListFragment();
         settingsPopup = new SettingsPopup(this);
         settingsPopup.setOnDismissListener(new OnDismissListener() {
 
@@ -85,19 +82,15 @@ public class MainActivity extends Activity implements
         });
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        try {
-            MapsInitializer.initialize(getApplicationContext());
-        } catch (GooglePlayServicesNotAvailableException ex) {
-            Log.e(LOG, ex.toString());
-        }
-
-        buildGUI();
-
-        if (currentLocation == null) {
-            addWaitForGPSSignal();
-        }
+        //try {
+        MapsInitializer.initialize(getApplicationContext());
+        //} catch (GooglePlayServicesNotAvailableException ex) {
+        //    Log.e(LOG, ex.toString());
+        //}
 
         gcmHandler = new GcmHandler(this);
+        checkServices();
+        buildGUI();
 
         Log.d(LOG, "end of onCreate");
     }
@@ -112,24 +105,33 @@ public class MainActivity extends Activity implements
         SpinnerAdapter spinnerAdapter = ArrayAdapter.createFromResource(this, R.array.action_list,
                 android.R.layout.simple_spinner_dropdown_item);
 
+        mapViewFragment = new TaxiTwinMapFragment();
+        listViewFragment = new TaxiTwinListFragment();
+
+        FragmentManager fm = getFragmentManager();
+
+        FragmentTransaction ft = fm.beginTransaction();
+        ft.add(R.id.main_fragment, mapViewFragment, "Map view");
+        ft.add(R.id.main_fragment, listViewFragment, "List view");
+        ft.hide(listViewFragment);
+
+        ft.commit();
+        fm.executePendingTransactions();
+
         ActionBar actionBar = getActionBar();
         actionBar.setListNavigationCallbacks(spinnerAdapter, new OnNavigationListener() {
-            String[] strings = getResources().getStringArray(R.array.action_list);
-
             @Override
             public boolean onNavigationItemSelected(int position, long itemId) {
                 FragmentManager fm = getFragmentManager();
-                Fragment f = fm.findFragmentById(R.id.main_fragment);
-
                 FragmentTransaction ft = fm.beginTransaction();
-                if (f != null) {
-                    ft.hide(f);
-                }
+
                 if (position == LIST_VIEW_POSITION) {
-                    ft.replace(R.id.main_fragment, listViewFragment, strings[position]);
+                    ft.hide(mapViewFragment);
+                    ft.show(listViewFragment);
                     Log.d(LOG, "in if, position:" + position);
                 } else if (position == MAP_VIEW_POSITION) {
-                    ft.replace(R.id.main_fragment, mapViewFragment, strings[position]);
+                    ft.hide(listViewFragment);
+                    ft.show(mapViewFragment);
                     Log.d(LOG, "in else, position:" + position);
                 }
                 ft.commit();
@@ -141,6 +143,10 @@ public class MainActivity extends Activity implements
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setDisplayShowHomeEnabled(false);
+
+        if (currentLocation == null) {
+            addWaitForGPSSignal();
+        }
     }
 
     @Override
@@ -326,14 +332,19 @@ public class MainActivity extends Activity implements
         currentLocation = location;
         LatLng currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
 
-        MarkerOptions currentMarkerOptions = new MarkerOptions();
-        currentMarkerOptions.position(currentLatLng);
-        currentMarkerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.you_pin));
-        currentMarkerOptions.anchor(0.14f, 0.67f);
-        Marker currentMarker = map.addMarker(currentMarkerOptions);
+        if (currentMarker == null) {
+            MarkerOptions currentMarkerOptions = new MarkerOptions();
+            currentMarkerOptions.position(currentLatLng);
+            currentMarkerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.you_pin));
+            currentMarkerOptions.anchor(0.14f, 0.67f);
+            currentMarker = map.addMarker(currentMarkerOptions);
 
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 8));
-        map.animateCamera(CameraUpdateFactory.zoomTo(14), 2000, null);
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 8));
+            map.animateCamera(CameraUpdateFactory.zoomTo(14), 2000, null);
+        } else {
+            currentMarker.setPosition(currentLatLng);
+            map.animateCamera(CameraUpdateFactory.newLatLng(currentLatLng));
+        }
 
         gcmHandler.locationChanged(currentLocation);
     }
