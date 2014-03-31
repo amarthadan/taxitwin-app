@@ -8,6 +8,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import java.io.IOException;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import kimle.michal.android.taxitwin.R;
 
@@ -18,10 +19,11 @@ public class GcmConnector {
     private static final String SENDER_ID = "275458664476";
     private static final String GCM_SERVER = "@gcm.googleapis.com";
     private static final String LOG = "GcmConnector";
-    private final AtomicInteger messageId = new AtomicInteger();
+    private final AtomicInteger messageId;
 
     public GcmConnector(Context context) {
         this.context = context;
+        messageId = new AtomicInteger(new Random(System.currentTimeMillis()).nextInt());
     }
 
     public void connect() {
@@ -69,6 +71,7 @@ public class GcmConnector {
             protected Void doInBackground(Bundle... data) {
                 try {
                     String id = Integer.toString(messageId.incrementAndGet());
+                    Log.d(LOG, "message: " + data[0]);
                     gcm.send(SENDER_ID + GCM_SERVER, id, data[0]);
                     Log.d(LOG, "message sent...");
                 } catch (IOException ex) {

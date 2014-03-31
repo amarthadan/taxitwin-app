@@ -36,10 +36,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!--        <provider
+        <provider
             android:name="kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider"
             android:authorities="kimle.michal.android.taxitwin.contentprovider" >
-        </provider>-->
+        </provider>
         <receiver
             android:name=".gcm.GcmBroadcastReceiver"
             android:permission="com.google.android.c2dm.permission.SEND" >

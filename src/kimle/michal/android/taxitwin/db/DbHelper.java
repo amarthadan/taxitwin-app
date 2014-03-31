@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DbHelper extends SQLiteOpenHelper {
 
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 6;
     public static final String DATABASE = "taxitwin.db";
 
     //taxitwin table
@@ -18,7 +18,7 @@ public class DbHelper extends SQLiteOpenHelper {
             + DbContract.DbEntry._ID + ") ON DELETE CASCADE, "
             + DbContract.DbEntry.TAXITWIN_END_POINT_ID_COLUMN + " INTEGER NOT NULL REFERENCES "
             + DbContract.DbEntry.POINT_TABLE + "("
-            + DbContract.DbEntry._ID + ") ON DELETE CASCADE "
+            + DbContract.DbEntry._ID + ") ON DELETE CASCADE, "
             + DbContract.DbEntry.TAXITWIN_NAME_COLUMN + " TEXT NOT NULL);";
     private static final String TAXITWIN_TABLE_DROP
             = "DROP TABLE IF EXISTS " + DbContract.DbEntry.TAXITWIN_TABLE;

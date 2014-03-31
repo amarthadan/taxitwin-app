@@ -15,16 +15,21 @@ import kimle.michal.android.taxitwin.entity.Place;
 public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static final String GCM_DATA_TYPE = "type";
+    public static final String GCM_DATA_ID = "id";
     public static final String GCM_DATA_START_LONGITUDE = "start_long";
     public static final String GCM_DATA_START_LATITUDE = "start_lat";
+    public static final String GCM_DATA_START_TEXTUAL = "start_text";
     public static final String GCM_DATA_END_LONGITUDE = "end_long";
     public static final String GCM_DATA_END_LATITUDE = "end_lat";
+    public static final String GCM_DATA_END_TEXTUAL = "end_text";
     public static final String GCM_DATA_RADIUS = "radius";
     public static final String GCM_DATA_NAME = "name";
     public static final String GCM_DATA_PASSENGERS = "passengers";
+    public static final String GCM_DATA_PASSENGERS_TOTAL = "passengers_total";
     public static final String GCM_DATA_TAXITWIN_ID = "taxitwin_id";
     public static final String GCM_DATA_TYPE_SUBSCRIBE = "subscribe";
     public static final String GCM_DATA_TYPE_MODIFY = "modify";
+    public static final String GCM_DATA_TYPE_OFFER = "offer";
     private static final String LOG = "GcmHandler";
     private boolean subscribed;
     private Place current;
