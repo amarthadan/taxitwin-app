@@ -29,13 +29,7 @@ import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapsInitializer;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import kimle.michal.android.taxitwin.R;
 import kimle.michal.android.taxitwin.db.DbHelper;
 import kimle.michal.android.taxitwin.dialog.alert.GPSAlertDialogFragment;
@@ -59,16 +53,14 @@ public class MainActivity extends Activity implements
     private static final int PLAY_SERVICES_REQUEST = 9000;
     private static final int GPS_REQUEST = 10000;
     public static final String CATEGORY_NEW_DATA = "kimle.michal.android.taxitwin.CATEGORY_NEW_DATA";
-    private Location currentLocation = null;
     private LocationManager locationManager;
-    private GoogleMap map;
+    //private GoogleMap map;
     private boolean gpsEnabled = false;
     private TaxiTwinMapFragment mapViewFragment;
     private TaxiTwinListFragment listViewFragment;
     private SettingsPopup settingsPopup;
     private MenuItem settingsMenuItem;
     private GcmHandler gcmHandler;
-    private Marker currentMarker;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -148,9 +140,7 @@ public class MainActivity extends Activity implements
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setDisplayShowHomeEnabled(false);
 
-        if (currentLocation == null) {
-            addWaitForGPSSignal();
-        }
+        addWaitForGPSSignal();
     }
 
     @Override
@@ -307,7 +297,9 @@ public class MainActivity extends Activity implements
         LocationListener locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the gps location provider.
-                updateCurrentLocation(location);
+                mapViewFragment.updateCurrentLocation(location);
+                gcmHandler.locationChanged(location);
+                removeWaitForGPSSignal();
                 Log.d(LOG, "onLocationChanged");
             }
 
@@ -331,31 +323,6 @@ public class MainActivity extends Activity implements
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 3, locationListener);
     }
 
-    private void updateCurrentLocation(Location location) {
-        if (currentLocation == null) {
-            removeWaitForGPSSignal();
-        }
-
-        currentLocation = location;
-        LatLng currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-
-        if (currentMarker == null) {
-            MarkerOptions currentMarkerOptions = new MarkerOptions();
-            currentMarkerOptions.position(currentLatLng);
-            currentMarkerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.you_pin));
-            currentMarkerOptions.anchor(0.14f, 0.67f);
-            currentMarker = map.addMarker(currentMarkerOptions);
-
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 8));
-            map.animateCamera(CameraUpdateFactory.zoomTo(14), 2000, null);
-        } else {
-            currentMarker.setPosition(currentLatLng);
-            map.animateCamera(CameraUpdateFactory.newLatLng(currentLatLng));
-        }
-
-        gcmHandler.locationChanged(currentLocation);
-    }
-
     private void addWaitForGPSSignal() {
         TextView bottomText = (TextView) findViewById(R.id.bottom_text);
         bottomText.setText(R.string.waiting_for_signal);
@@ -368,9 +335,6 @@ public class MainActivity extends Activity implements
     }
 
     public void onMapCreated() {
-        map = mapViewFragment.getMap();
-        Log.d(LOG, "map: " + map);
-
         if (gpsEnabled) {
             requestLocationChanges();
         }
