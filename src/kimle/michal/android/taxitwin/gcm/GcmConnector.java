@@ -16,6 +16,7 @@ public class GcmConnector {
 
     private final Context context;
     private GoogleCloudMessaging gcm;
+    private static final int TTL = 0;
     private static final String SENDER_ID = "275458664476";
     private static final String GCM_SERVER = "@gcm.googleapis.com";
     private static final String LOG = "GcmConnector";
@@ -72,7 +73,7 @@ public class GcmConnector {
                 try {
                     String id = Integer.toString(messageId.incrementAndGet());
                     Log.d(LOG, "message: " + data[0]);
-                    gcm.send(SENDER_ID + GCM_SERVER, id, data[0]);
+                    gcm.send(SENDER_ID + GCM_SERVER, id, TTL, data[0]);
                     Log.d(LOG, "message sent...");
                 } catch (IOException ex) {
                     Log.e(LOG, ex.getMessage());

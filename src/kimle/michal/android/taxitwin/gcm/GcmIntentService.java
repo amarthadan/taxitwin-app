@@ -7,12 +7,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import kimle.michal.android.taxitwin.activity.MainActivity;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
 
 public class GcmIntentService extends IntentService {
 
     private static final String LOG = "GcmIntentService";
+    public static final String ACTION_TAXITWIN = "kimle.michal.android.taxitwin.ACTION_TAXITWIN";
 
     public GcmIntentService() {
         super("GcmIntentService");
@@ -73,5 +75,13 @@ public class GcmIntentService extends IntentService {
         values.put(DbContract.DbEntry.OFFER_PASSENGERS_COLUMN, extras.getString(GcmHandler.GCM_DATA_PASSENGERS));
         values.put(DbContract.DbEntry.OFFER_PASSENGERS_TOTAL_COLUMN, extras.getString(GcmHandler.GCM_DATA_PASSENGERS_TOTAL));
         getContentResolver().insert(TaxiTwinContentProvider.OFFERS_URI, values);
+
+        Intent newDataIntent = new Intent(ACTION_TAXITWIN);
+        newDataIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        newDataIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        newDataIntent.addCategory(MainActivity.CATEGORY_NEW_DATA);
+        newDataIntent.addCategory(Intent.CATEGORY_DEFAULT);
+
+        startActivity(newDataIntent);
     }
 }

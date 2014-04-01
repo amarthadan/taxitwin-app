@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DbHelper extends SQLiteOpenHelper {
 
-    public static final int DATABASE_VERSION = 6;
+    public static final int DATABASE_VERSION = 15;
     public static final String DATABASE = "taxitwin.db";
 
     //taxitwin table
@@ -21,7 +21,9 @@ public class DbHelper extends SQLiteOpenHelper {
             + DbContract.DbEntry._ID + ") ON DELETE CASCADE, "
             + DbContract.DbEntry.TAXITWIN_NAME_COLUMN + " TEXT NOT NULL);";
     private static final String TAXITWIN_TABLE_DROP
-            = "DROP TABLE IF EXISTS " + DbContract.DbEntry.TAXITWIN_TABLE;
+            = "DROP TABLE IF EXISTS " + DbContract.DbEntry.TAXITWIN_TABLE + ";";
+    private static final String TAXITWIN_TABLE_DELETE
+            = "DELETE FROM " + DbContract.DbEntry.TAXITWIN_TABLE + ";";
 
     //point table
     private static final String POINT_TABLE_CREATE
@@ -31,7 +33,9 @@ public class DbHelper extends SQLiteOpenHelper {
             + DbContract.DbEntry.POINT_LONGITUDE_COLUMN + " REAL NOT NULL, "
             + DbContract.DbEntry.POINT_TEXTUAL_COLUMN + " TEXT NOT NULL);";
     private static final String POINT_TABLE_DROP
-            = "DROP TABLE IF EXISTS " + DbContract.DbEntry.POINT_TABLE;
+            = "DROP TABLE IF EXISTS " + DbContract.DbEntry.POINT_TABLE + ";";
+    private static final String POINT_TABLE_DELETE
+            = "DELETE FROM " + DbContract.DbEntry.POINT_TABLE + ";";
 
     //response table
     private static final String RESPONSE_TABLE_CREATE
@@ -41,7 +45,9 @@ public class DbHelper extends SQLiteOpenHelper {
             + DbContract.DbEntry.TAXITWIN_TABLE + "("
             + DbContract.DbEntry._ID + ") ON DELETE CASCADE);";
     private static final String RESPONSE_TABLE_DROP
-            = "DROP TABLE IF EXISTS " + DbContract.DbEntry.RESPONSE_TABLE;
+            = "DROP TABLE IF EXISTS " + DbContract.DbEntry.RESPONSE_TABLE + ";";
+    private static final String RESPONSE_TABLE_DELETE
+            = "DELETE FROM " + DbContract.DbEntry.RESPONSE_TABLE + ";";
 
     //offer table
     private static final String OFFER_TABLE_CREATE
@@ -53,7 +59,9 @@ public class DbHelper extends SQLiteOpenHelper {
             + DbContract.DbEntry.OFFER_PASSENGERS_TOTAL_COLUMN + " INTEGER NOT NULL, "
             + DbContract.DbEntry.OFFER_PASSENGERS_COLUMN + " INTEGER NOT NULL);";
     private static final String OFFER_TABLE_DROP
-            = "DROP TABLE IF EXISTS " + DbContract.DbEntry.OFFER_TABLE;
+            = "DROP TABLE IF EXISTS " + DbContract.DbEntry.OFFER_TABLE + ";";
+    private static final String OFFER_TABLE_DELETE
+            = "DELETE FROM " + DbContract.DbEntry.OFFER_TABLE + ";";
 
     //ride table
     private static final String RIDE_TABLE_CREATE
@@ -63,7 +71,9 @@ public class DbHelper extends SQLiteOpenHelper {
             + DbContract.DbEntry.OFFER_TABLE + "("
             + DbContract.DbEntry._ID + ") ON DELETE CASCADE);";
     private static final String RIDE_TABLE_DROP
-            = "DROP TABLE IF EXISTS " + DbContract.DbEntry.RIDE_TABLE;
+            = "DROP TABLE IF EXISTS " + DbContract.DbEntry.RIDE_TABLE + ";";
+    private static final String RIDE_TABLE_DELETE
+            = "DELETE FROM " + DbContract.DbEntry.RIDE_TABLE + ";";
 
     public DbHelper(Context context) {
         super(context, DATABASE, null, DATABASE_VERSION);
@@ -80,12 +90,24 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        dropTables(db);
+        onCreate(db);
+    }
+
+    private void dropTables(SQLiteDatabase db) {
         db.execSQL(RIDE_TABLE_DROP);;
         db.execSQL(OFFER_TABLE_DROP);
         db.execSQL(RESPONSE_TABLE_DROP);
         db.execSQL(TAXITWIN_TABLE_DROP);
         db.execSQL(POINT_TABLE_DROP);
-        onCreate(db);
+    }
+
+    public void deleteTables(SQLiteDatabase db) {
+        db.execSQL(RIDE_TABLE_DELETE);;
+        db.execSQL(OFFER_TABLE_DELETE);
+        db.execSQL(RESPONSE_TABLE_DELETE);
+        db.execSQL(TAXITWIN_TABLE_DELETE);
+        db.execSQL(POINT_TABLE_DELETE);
     }
 
     @Override

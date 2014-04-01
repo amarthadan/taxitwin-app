@@ -1,7 +1,73 @@
 package kimle.michal.android.taxitwin.fragment;
 
 import android.app.ListFragment;
+import android.app.LoaderManager;
+import android.content.CursorLoader;
+import android.content.Loader;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Bundle;
+import android.widget.SimpleCursorAdapter;
+import kimle.michal.android.taxitwin.R;
+import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
+import kimle.michal.android.taxitwin.db.DbContract;
 
-public class TaxiTwinListFragment extends ListFragment {
+public class TaxiTwinListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    private SimpleCursorAdapter adapter;
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        setupAdapter();
+    }
+
+    private void setupAdapter() {
+        String[] columns = new String[]{
+            DbContract.DbEntry.TAXITWIN_NAME_COLUMN,
+            DbContract.DbEntry.POINT_TEXTUAL_COLUMN,
+            DbContract.DbEntry.POINT_TEXTUAL_COLUMN};
+
+        int[] to = new int[]{
+            R.id.name_text,
+            R.id.from_text,
+            R.id.to_text};
+
+        getLoaderManager().initLoader(0, null, this);
+
+        adapter = new SimpleCursorAdapter(
+                getActivity(), R.layout.offer,
+                null,
+                columns,
+                to,
+                0);
+
+        setListAdapter(adapter);
+    }
+
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        String[] projection = {
+            DbContract.DbEntry.OFFER_ID_COLUMN,
+            DbContract.DbEntry.TAXITWIN_NAME_COLUMN,
+            DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_TEXTUAL_COLUMN,
+            DbContract.DbEntry.POINT_END_TABLE + "." + DbContract.DbEntry.POINT_TEXTUAL_COLUMN};
+
+        Uri uri = TaxiTwinContentProvider.OFFERS_URI;
+
+        CursorLoader cursorLoader = new CursorLoader(getActivity(), uri, projection, null, null, null);
+        return cursorLoader;
+    }
+
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        adapter.swapCursor(data);
+    }
+
+    public void onLoaderReset(Loader<Cursor> loader) {
+        adapter.swapCursor(null);
+    }
+
+    public void updateView() {
+        getLoaderManager().restartLoader(0, null, this);
+        adapter.notifyDataSetChanged();
+    }
 }

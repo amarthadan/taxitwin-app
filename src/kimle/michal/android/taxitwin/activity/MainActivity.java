@@ -37,6 +37,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import kimle.michal.android.taxitwin.R;
+import kimle.michal.android.taxitwin.db.DbHelper;
 import kimle.michal.android.taxitwin.dialog.alert.GPSAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.GooglePlayServicesAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.InternetAlertDialogFragment;
@@ -57,6 +58,7 @@ public class MainActivity extends Activity implements
     private static final int LIST_VIEW_POSITION = 1;
     private static final int PLAY_SERVICES_REQUEST = 9000;
     private static final int GPS_REQUEST = 10000;
+    public static final String CATEGORY_NEW_DATA = "kimle.michal.android.taxitwin.CATEGORY_NEW_DATA";
     private Location currentLocation = null;
     private LocationManager locationManager;
     private GoogleMap map;
@@ -128,10 +130,12 @@ public class MainActivity extends Activity implements
                 if (position == LIST_VIEW_POSITION) {
                     ft.hide(mapViewFragment);
                     ft.show(listViewFragment);
+                    listViewFragment.updateView();
                     Log.d(LOG, "in if, position:" + position);
                 } else if (position == MAP_VIEW_POSITION) {
                     ft.hide(listViewFragment);
                     ft.show(mapViewFragment);
+                    mapViewFragment.loadData();
                     Log.d(LOG, "in else, position:" + position);
                 }
                 ft.commit();
@@ -238,6 +242,9 @@ public class MainActivity extends Activity implements
     }
 
     private void exit() {
+        gcmHandler.unsubscribe();
+        DbHelper dbHelper = new DbHelper(this);
+        dbHelper.deleteTables(dbHelper.getWritableDatabase());
         android.os.Process.killProcess(android.os.Process.myPid());
     }
 
@@ -367,5 +374,22 @@ public class MainActivity extends Activity implements
         if (gpsEnabled) {
             requestLocationChanges();
         }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+
+        Log.d(LOG, "in onNewIntent");
+
+        if (intent.hasCategory(CATEGORY_NEW_DATA)) {
+            notifyNewData();
+        }
+    }
+
+    private void notifyNewData() {
+        listViewFragment.updateView();
+        mapViewFragment.loadData();
     }
 }

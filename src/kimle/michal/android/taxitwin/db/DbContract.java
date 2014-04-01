@@ -12,6 +12,8 @@ public class DbContract {
         //tables
         public static final String TAXITWIN_TABLE = "taxitwin";
         public static final String POINT_TABLE = "point";
+        public static final String POINT_START_TABLE = "startpoint";
+        public static final String POINT_END_TABLE = "endpoint";
         public static final String RESPONSE_TABLE = "response";
         public static final String OFFER_TABLE = "offer";
         public static final String RIDE_TABLE = "ride";
@@ -24,6 +26,8 @@ public class DbContract {
 
         //point table
         public static final String POINT_ID_COLUMN = POINT_TABLE + "." + _ID;
+        public static final String POINT_START_ID_COLUMN = POINT_START_TABLE + "." + _ID;
+        public static final String POINT_END_ID_COLUMN = POINT_END_TABLE + "." + _ID;
         public static final String POINT_LATITUDE_COLUMN = "latitude";
         public static final String POINT_LONGITUDE_COLUMN = "longitude";
         public static final String POINT_TEXTUAL_COLUMN = "textual";

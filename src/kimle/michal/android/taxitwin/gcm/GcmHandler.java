@@ -28,6 +28,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     public static final String GCM_DATA_PASSENGERS_TOTAL = "passengers_total";
     public static final String GCM_DATA_TAXITWIN_ID = "taxitwin_id";
     public static final String GCM_DATA_TYPE_SUBSCRIBE = "subscribe";
+    public static final String GCM_DATA_TYPE_UNSUBSCRIBE = "unsubscribe";
     public static final String GCM_DATA_TYPE_MODIFY = "modify";
     public static final String GCM_DATA_TYPE_OFFER = "offer";
     private static final String LOG = "GcmHandler";
@@ -188,5 +189,13 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         Log.w(LOG, "no name was found");
         return "";
         //FIXME giving email not name
+    }
+
+    public void unsubscribe() {
+        Bundle data = new Bundle();
+        data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_UNSUBSCRIBE);
+
+        gcmConnector.send(data);
+        subscribed = false;
     }
 }

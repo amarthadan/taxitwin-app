@@ -37,6 +37,11 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="kimle.michal.android.taxitwin.ACTION_TAXITWIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="kimle.michal.android.taxitwin.CATEGORY_NEW_DATA" />
+            </intent-filter>
         </activity>
         <provider
             android:name="kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider"

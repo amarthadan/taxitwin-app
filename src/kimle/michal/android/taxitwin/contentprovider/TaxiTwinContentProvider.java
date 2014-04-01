@@ -7,7 +7,9 @@ import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.util.Log;
 import java.util.Arrays;
 import java.util.HashSet;
 import kimle.michal.android.taxitwin.db.DbContract;
@@ -15,12 +17,14 @@ import kimle.michal.android.taxitwin.db.DbHelper;
 
 public class TaxiTwinContentProvider extends ContentProvider {
 
+    private static final String LOG = "TaxiTwinContentProvider";
     private DbHelper dbHelper;
     private SQLiteDatabase db;
     private static final String AUTHORITY = "kimle.michal.android.taxitwin.contentprovider";
     private static final int TAXITWINS = 10;
     private static final int POINTS = 11;
     private static final int OFFERS = 12;
+    private static final int OFFERS_ID = 15;
     private static final int RESPONSES = 13;
     private static final int RIDES = 14;
     private static final String TAXITWINS_PATH = "taxitwins";
@@ -40,6 +44,7 @@ public class TaxiTwinContentProvider extends ContentProvider {
         sURIMatcher.addURI(AUTHORITY, TAXITWINS_PATH, TAXITWINS);
         sURIMatcher.addURI(AUTHORITY, POINTS_PATH, POINTS);
         sURIMatcher.addURI(AUTHORITY, OFFERS_PATH, OFFERS);
+        sURIMatcher.addURI(AUTHORITY, OFFERS_PATH + "/#", OFFERS_ID);
         sURIMatcher.addURI(AUTHORITY, RESPONSES_PATH, RESPONSES);
         sURIMatcher.addURI(AUTHORITY, RIDES_PATH, RIDES);
     }
@@ -52,7 +57,36 @@ public class TaxiTwinContentProvider extends ContentProvider {
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        int uriType = sURIMatcher.match(uri);
+        db = dbHelper.getReadableDatabase();
+        Cursor cursor;
+        checkColumns(projection);
+
+        SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
+        switch (uriType) {
+            case OFFERS_ID:
+                queryBuilder.appendWhere(DbContract.DbEntry.OFFER_ID_COLUMN + "="
+                        + uri.getLastPathSegment());
+            case OFFERS:
+                queryBuilder.setTables(DbContract.DbEntry.OFFER_TABLE
+                        + " inner join " + DbContract.DbEntry.TAXITWIN_TABLE
+                        + " on " + DbContract.DbEntry.TAXITWIN_ID_COLUMN
+                        + " = " + DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN
+                        + " inner join " + DbContract.DbEntry.POINT_TABLE
+                        + " as " + DbContract.DbEntry.POINT_START_TABLE
+                        + " on " + DbContract.DbEntry.TAXITWIN_START_POINT_ID_COLUMN
+                        + " = " + DbContract.DbEntry.POINT_START_ID_COLUMN
+                        + " inner join " + DbContract.DbEntry.POINT_TABLE
+                        + " as " + DbContract.DbEntry.POINT_END_TABLE
+                        + " on " + DbContract.DbEntry.TAXITWIN_END_POINT_ID_COLUMN
+                        + " = " + DbContract.DbEntry.POINT_END_ID_COLUMN);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown URI: " + uri);
+        }
+        Log.d(LOG, queryBuilder.buildQuery(projection, selection, selectionArgs, null, null, sortOrder, null));
+        cursor = queryBuilder.query(db, projection, selection, selectionArgs, null, null, sortOrder, null);
+        return cursor;
     }
 
     @Override
@@ -65,6 +99,8 @@ public class TaxiTwinContentProvider extends ContentProvider {
                 return ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + VND + "." + POINTS_PATH;
             case OFFERS:
                 return ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + VND + "." + OFFERS_PATH;
+            case OFFERS_ID:
+                return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + VND + "." + OFFERS_PATH;
             case RESPONSES:
                 return ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + VND + "." + RESPONSES_PATH;
             case RIDES:
@@ -130,7 +166,15 @@ public class TaxiTwinContentProvider extends ContentProvider {
             DbContract.DbEntry.TAXITWIN_END_POINT_ID_COLUMN,
             DbContract.DbEntry.TAXITWIN_ID_COLUMN,
             DbContract.DbEntry.TAXITWIN_NAME_COLUMN,
-            DbContract.DbEntry.TAXITWIN_START_POINT_ID_COLUMN
+            DbContract.DbEntry.TAXITWIN_START_POINT_ID_COLUMN,
+            DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_TEXTUAL_COLUMN,
+            DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_LATITUDE_COLUMN,
+            DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_LONGITUDE_COLUMN,
+            DbContract.DbEntry.POINT_END_TABLE + "." + DbContract.DbEntry.POINT_TEXTUAL_COLUMN,
+            DbContract.DbEntry.POINT_END_TABLE + "." + DbContract.DbEntry.POINT_LATITUDE_COLUMN,
+            DbContract.DbEntry.POINT_END_TABLE + "." + DbContract.DbEntry.POINT_LONGITUDE_COLUMN,
+            DbContract.DbEntry.POINT_START_ID_COLUMN,
+            DbContract.DbEntry.POINT_END_ID_COLUMN
         };
         if (projection != null) {
             HashSet<String> requestedColumns = new HashSet<String>(Arrays.asList(projection));
