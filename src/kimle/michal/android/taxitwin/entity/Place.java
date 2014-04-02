@@ -1,6 +1,9 @@
 package kimle.michal.android.taxitwin.entity;
 
-public class Place {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Place implements Parcelable {
 
     private String address;
     private Double latitude;
@@ -13,6 +16,12 @@ public class Place {
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+
+    public Place(Parcel in) {
+        address = in.readString();
+        longitude = in.readDouble();
+        latitude = in.readDouble();
     }
 
     public String getAddress() {
@@ -76,4 +85,26 @@ public class Place {
     public String toString() {
         return "Place{" + "address=" + address + ", latitude=" + latitude + ", longitude=" + longitude + '}';
     }
+
+    public int describeContents() {
+        return 0;
+    }
+
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeDouble(latitude);
+        dest.writeDouble(longitude);
+        dest.writeString(address);
+    }
+
+    public static final Parcelable.Creator<Place> CREATOR
+            = new Parcelable.Creator<Place>() {
+                public Place createFromParcel(Parcel in) {
+                    return new Place(in);
+                }
+
+                public Place[] newArray(int size) {
+                    return new Place[size];
+                }
+            };
+
 }

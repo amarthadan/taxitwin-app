@@ -41,13 +41,19 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     private boolean goodToGo;
     private final GcmConnector gcmConnector;
 
-    public GcmHandler(Context context) {
+    public GcmHandler(Context context, boolean subscribed, Place current) {
         this.context = context;
+        this.subscribed = subscribed;
+        this.current = current;
 
         PreferenceManager.getDefaultSharedPreferences(context).registerOnSharedPreferenceChangeListener(this);
         loadPreferences();
         goodToGo = false;
         gcmConnector = new GcmConnector(context);
+    }
+
+    public GcmHandler(Context context) {
+        this(context, false, null);
     }
 
     public void setGoodToGo(boolean status) {
@@ -67,6 +73,10 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
 
     public boolean isSubscribed() {
         return subscribed;
+    }
+
+    public Place getCurrentLocation() {
+        return current;
     }
 
     public void locationChanged(Location location) {

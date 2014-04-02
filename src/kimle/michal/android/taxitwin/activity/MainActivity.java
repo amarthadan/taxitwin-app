@@ -36,6 +36,7 @@ import kimle.michal.android.taxitwin.dialog.alert.GPSAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.GooglePlayServicesAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.InternetAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.error.GooglePlayServicesErrorDialogFragment;
+import kimle.michal.android.taxitwin.entity.Place;
 import kimle.michal.android.taxitwin.fragment.TaxiTwinListFragment;
 import kimle.michal.android.taxitwin.fragment.TaxiTwinMapFragment;
 import kimle.michal.android.taxitwin.gcm.GcmHandler;
@@ -56,6 +57,8 @@ public class MainActivity extends Activity implements
     private static final String SAVED_NAVIGATION_POSITION = "savedNavigationPosition";
     private static final String SAVED_MAP_FRAGMENT = "savedMapFragment";
     private static final String SAVED_LIST_FRAGMENT = "savedListFragment";
+    private static final String SAVED_SUBSCRIBED = "savedSubscribed";
+    private static final String SAVED_CURRENT_POSITION = "savedcurrentPosition";
     private LocationManager locationManager;
     private boolean gpsEnabled = false;
     private TaxiTwinMapFragment mapViewFragment;
@@ -81,7 +84,11 @@ public class MainActivity extends Activity implements
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         MapsInitializer.initialize(getApplicationContext());
-        gcmHandler = new GcmHandler(this);
+        if (savedInstanceState != null) {
+            gcmHandler = new GcmHandler(this, savedInstanceState.getBoolean(SAVED_SUBSCRIBED), (Place) savedInstanceState.getParcelable(SAVED_CURRENT_POSITION));
+        } else {
+            gcmHandler = new GcmHandler(this);
+        }
         checkServices();
         buildGUI(savedInstanceState);
 
@@ -114,8 +121,12 @@ public class MainActivity extends Activity implements
         }
 
         FragmentTransaction ft = fm.beginTransaction();
-        ft.add(R.id.main_fragment, mapViewFragment, "Map view");
-        ft.add(R.id.main_fragment, listViewFragment, "List view");
+        if (!mapViewFragment.isAdded()) {
+            ft.add(R.id.main_fragment, mapViewFragment, "Map view");
+        }
+        if (!listViewFragment.isAdded()) {
+            ft.add(R.id.main_fragment, listViewFragment, "List view");
+        }
         ft.hide(listViewFragment);
 
         ft.commit();
@@ -162,6 +173,8 @@ public class MainActivity extends Activity implements
         savedInstanceState.putInt(SAVED_NAVIGATION_POSITION, getActionBar().getSelectedNavigationIndex());
         getFragmentManager().putFragment(savedInstanceState, SAVED_MAP_FRAGMENT, mapViewFragment);
         getFragmentManager().putFragment(savedInstanceState, SAVED_LIST_FRAGMENT, listViewFragment);
+        savedInstanceState.putBoolean(SAVED_SUBSCRIBED, gcmHandler.isSubscribed());
+        savedInstanceState.putParcelable(SAVED_CURRENT_POSITION, gcmHandler.getCurrentLocation());
     }
 
     @Override
