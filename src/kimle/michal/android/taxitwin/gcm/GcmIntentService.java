@@ -4,6 +4,8 @@ import android.app.IntentService;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -38,6 +40,9 @@ public class GcmIntentService extends IntentService {
                     String type = extras.getString(GcmHandler.GCM_DATA_TYPE);
                     if (type.equals(GcmHandler.GCM_DATA_TYPE_OFFER)) {
                         offerReceived(extras);
+                    }
+                    if (type.equals(GcmHandler.GCM_DATA_TYPE_INVALIDATE)) {
+                        offerInvalidate(extras);
                     }
                 }
             }
@@ -76,12 +81,36 @@ public class GcmIntentService extends IntentService {
         values.put(DbContract.DbEntry.OFFER_PASSENGERS_TOTAL_COLUMN, extras.getString(GcmHandler.GCM_DATA_PASSENGERS_TOTAL));
         getContentResolver().insert(TaxiTwinContentProvider.OFFERS_URI, values);
 
-        Intent newDataIntent = new Intent(ACTION_TAXITWIN);
-        newDataIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        newDataIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        newDataIntent.addCategory(MainActivity.CATEGORY_NEW_DATA);
-        newDataIntent.addCategory(Intent.CATEGORY_DEFAULT);
+        Intent intent = new Intent(ACTION_TAXITWIN);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addCategory(MainActivity.CATEGORY_DATA_CHANGED);
+        intent.addCategory(Intent.CATEGORY_DEFAULT);
 
-        startActivity(newDataIntent);
+        startActivity(intent);
+    }
+
+    private void offerInvalidate(Bundle extras) {
+        String[] projection = {DbContract.DbEntry.OFFER_ID_COLUMN};
+        String selection = DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN + " = ?";
+        String[] selectionArgs = {extras.getString(GcmHandler.GCM_DATA_ID)};
+
+        Cursor cursor = getContentResolver().query(TaxiTwinContentProvider.OFFERS_URI, projection, selection, selectionArgs, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            int offerId = cursor.getInt(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
+
+            Uri uri = Uri.parse(TaxiTwinContentProvider.OFFERS_URI + "/" + offerId);
+            getContentResolver().delete(uri, null, null);
+            cursor.close();
+        }
+
+        Intent intent = new Intent(ACTION_TAXITWIN);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addCategory(MainActivity.CATEGORY_DATA_CHANGED);
+        intent.addCategory(Intent.CATEGORY_DEFAULT);
+
+        startActivity(intent);
     }
 }

@@ -41,7 +41,7 @@
             <intent-filter>
                 <action android:name="kimle.michal.android.taxitwin.ACTION_TAXITWIN" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="kimle.michal.android.taxitwin.CATEGORY_NEW_DATA" />
+                <category android:name="kimle.michal.android.taxitwin.CATEGORY_DATA_CHANGED" />
             </intent-filter>
         </activity>
         <activity android:name=".activity.OfferDetailActivity"

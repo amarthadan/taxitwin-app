@@ -31,6 +31,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     public static final String GCM_DATA_TYPE_UNSUBSCRIBE = "unsubscribe";
     public static final String GCM_DATA_TYPE_MODIFY = "modify";
     public static final String GCM_DATA_TYPE_OFFER = "offer";
+    public static final String GCM_DATA_TYPE_INVALIDATE = "invalidate";
     private static final String LOG = "GcmHandler";
     private boolean subscribed;
     private Place current;

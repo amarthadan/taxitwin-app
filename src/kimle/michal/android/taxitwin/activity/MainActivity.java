@@ -53,7 +53,7 @@ public class MainActivity extends Activity implements
     private static final int LIST_VIEW_POSITION = 1;
     private static final int PLAY_SERVICES_REQUEST = 9000;
     private static final int GPS_REQUEST = 10000;
-    public static final String CATEGORY_NEW_DATA = "kimle.michal.android.taxitwin.CATEGORY_NEW_DATA";
+    public static final String CATEGORY_DATA_CHANGED = "kimle.michal.android.taxitwin.CATEGORY_DATA_CHANGED";
     private static final String SAVED_NAVIGATION_POSITION = "savedNavigationPosition";
     private static final String SAVED_MAP_FRAGMENT = "savedMapFragment";
     private static final String SAVED_LIST_FRAGMENT = "savedListFragment";
@@ -381,12 +381,12 @@ public class MainActivity extends Activity implements
 
         Log.d(LOG, "in onNewIntent");
 
-        if (intent.hasCategory(CATEGORY_NEW_DATA)) {
-            notifyNewData();
+        if (intent.hasCategory(CATEGORY_DATA_CHANGED)) {
+            notifyChangedData();
         }
     }
 
-    private void notifyNewData() {
+    private void notifyChangedData() {
         listViewFragment.updateView();
         mapViewFragment.loadData();
     }

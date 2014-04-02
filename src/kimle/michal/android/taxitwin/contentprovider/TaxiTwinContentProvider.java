@@ -142,7 +142,21 @@ public class TaxiTwinContentProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        int uriType = sURIMatcher.match(uri);
+        db = dbHelper.getWritableDatabase();
+        int rowsDeleted;
+
+        switch (uriType) {
+            case OFFERS_ID:
+                rowsDeleted = db.delete(DbContract.DbEntry.OFFER_TABLE,
+                        DbContract.DbEntry._ID + "=" + uri.getLastPathSegment(),
+                        null);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown URI: " + uri);
+        }
+        getContext().getContentResolver().notifyChange(uri, null);
+        return rowsDeleted;
     }
 
     @Override

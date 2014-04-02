@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DbHelper extends SQLiteOpenHelper {
 
-    public static final int DATABASE_VERSION = 15;
+    public static final int DATABASE_VERSION = 16;
     public static final String DATABASE = "taxitwin.db";
 
     //taxitwin table
@@ -95,7 +95,7 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     private void dropTables(SQLiteDatabase db) {
-        db.execSQL(RIDE_TABLE_DROP);;
+        db.execSQL(RIDE_TABLE_DROP);
         db.execSQL(OFFER_TABLE_DROP);
         db.execSQL(RESPONSE_TABLE_DROP);
         db.execSQL(TAXITWIN_TABLE_DROP);
@@ -103,7 +103,7 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public void deleteTables(SQLiteDatabase db) {
-        db.execSQL(RIDE_TABLE_DELETE);;
+        db.execSQL(RIDE_TABLE_DELETE);
         db.execSQL(OFFER_TABLE_DELETE);
         db.execSQL(RESPONSE_TABLE_DELETE);
         db.execSQL(TAXITWIN_TABLE_DELETE);
@@ -112,6 +112,15 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        if (!db.isReadOnly()) {
+            // Enable foreign key constraints
+            db.execSQL("PRAGMA foreign_keys=ON;");
+        }
+    }
+
+    @Override
+    public void onConfigure(SQLiteDatabase db) {
         super.onOpen(db);
         if (!db.isReadOnly()) {
             // Enable foreign key constraints
