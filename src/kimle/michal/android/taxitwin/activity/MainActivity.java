@@ -54,7 +54,6 @@ public class MainActivity extends Activity implements
     private static final int GPS_REQUEST = 10000;
     public static final String CATEGORY_NEW_DATA = "kimle.michal.android.taxitwin.CATEGORY_NEW_DATA";
     private LocationManager locationManager;
-    //private GoogleMap map;
     private boolean gpsEnabled = false;
     private TaxiTwinMapFragment mapViewFragment;
     private TaxiTwinListFragment listViewFragment;

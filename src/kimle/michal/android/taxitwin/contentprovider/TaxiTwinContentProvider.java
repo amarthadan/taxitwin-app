@@ -37,6 +37,8 @@ public class TaxiTwinContentProvider extends ContentProvider {
     public static final Uri OFFERS_URI = Uri.parse("content://" + AUTHORITY + "/" + OFFERS_PATH);
     public static final Uri RESPONSES_URI = Uri.parse("content://" + AUTHORITY + "/" + RESPONSES_PATH);
     public static final Uri RIDES_URI = Uri.parse("content://" + AUTHORITY + "/" + RIDES_PATH);
+    public static final String OFFER_CONTENT_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/offers";
+    public static final String OFFER_CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/offer";
     private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
     private static final String VND = "vnd.kimle.michal.android.taxitwin.contentprovider";
 
@@ -174,13 +176,19 @@ public class TaxiTwinContentProvider extends ContentProvider {
             DbContract.DbEntry.POINT_END_TABLE + "." + DbContract.DbEntry.POINT_LATITUDE_COLUMN,
             DbContract.DbEntry.POINT_END_TABLE + "." + DbContract.DbEntry.POINT_LONGITUDE_COLUMN,
             DbContract.DbEntry.POINT_START_ID_COLUMN,
-            DbContract.DbEntry.POINT_END_ID_COLUMN
+            DbContract.DbEntry.POINT_END_ID_COLUMN,
+            DbContract.DbEntry.POINT_END_TABLE + "." + DbContract.DbEntry.POINT_LONGITUDE_COLUMN + " as " + DbContract.DbEntry.AS_END_POINT_LONGITUDE_COLUMN,
+            DbContract.DbEntry.POINT_END_TABLE + "." + DbContract.DbEntry.POINT_LATITUDE_COLUMN + " as " + DbContract.DbEntry.AS_END_POINT_LATITUDE_COLUMN,
+            DbContract.DbEntry.POINT_END_TABLE + "." + DbContract.DbEntry.POINT_TEXTUAL_COLUMN + " as " + DbContract.DbEntry.AS_END_POINT_TEXTUAL_COLUMN,
+            DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_LONGITUDE_COLUMN + " as " + DbContract.DbEntry.AS_START_POINT_LONGITUDE_COLUMN,
+            DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_LATITUDE_COLUMN + " as " + DbContract.DbEntry.AS_START_POINT_LATITUDE_COLUMN,
+            DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_TEXTUAL_COLUMN + " as " + DbContract.DbEntry.AS_START_POINT_TEXTUAL_COLUMN
         };
         if (projection != null) {
             HashSet<String> requestedColumns = new HashSet<String>(Arrays.asList(projection));
             HashSet<String> availableColumns = new HashSet<String>(Arrays.asList(available));
             if (!availableColumns.containsAll(requestedColumns)) {
-                throw new IllegalArgumentException("Unknown columns in projection");
+                throw new IllegalArgumentException("Unknown columns in projection: " + projection);
             }
         }
     }

@@ -154,5 +154,6 @@ public class TaxiTwinMapFragment extends MapFragment {
         LatLngBounds bounds = builder.build();
 
         getMap().animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, PADDING));
+        //FIXME if there is only current position marker camera is too close
     }
 }

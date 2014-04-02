@@ -43,6 +43,13 @@
                 <category android:name="kimle.michal.android.taxitwin.CATEGORY_NEW_DATA" />
             </intent-filter>
         </activity>
+        <activity android:name=".activity.OfferDetailActivity"
+                  android:label="@string/offer_detail"
+                  android:parentActivityName="kimle.michal.android.taxitwin.activity.MainActivity">
+            <meta-data
+            android:name="android.support.PARENT_ACTIVITY"
+            android:value="kimle.michal.android.taxitwin.activity.MainActivity" />
+        </activity>
         <provider
             android:name="kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider"
             android:authorities="kimle.michal.android.taxitwin.contentprovider" >
