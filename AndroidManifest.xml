@@ -32,7 +32,8 @@
 
     <application android:label="@string/app_name" android:icon="@drawable/ic_launcher" android:allowBackup="false">
         <activity android:name=".activity.MainActivity"
-                  android:label="@string/app_name">
+                  android:label="@string/app_name"
+                  android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -47,8 +48,8 @@
                   android:label="@string/offer_detail"
                   android:parentActivityName="kimle.michal.android.taxitwin.activity.MainActivity">
             <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value="kimle.michal.android.taxitwin.activity.MainActivity" />
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="kimle.michal.android.taxitwin.activity.MainActivity" />
         </activity>
         <provider
             android:name="kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider"

@@ -53,6 +53,9 @@ public class MainActivity extends Activity implements
     private static final int PLAY_SERVICES_REQUEST = 9000;
     private static final int GPS_REQUEST = 10000;
     public static final String CATEGORY_NEW_DATA = "kimle.michal.android.taxitwin.CATEGORY_NEW_DATA";
+    private static final String SAVED_NAVIGATION_POSITION = "savedNavigationPosition";
+    private static final String SAVED_MAP_FRAGMENT = "savedMapFragment";
+    private static final String SAVED_LIST_FRAGMENT = "savedListFragment";
     private LocationManager locationManager;
     private boolean gpsEnabled = false;
     private TaxiTwinMapFragment mapViewFragment;
@@ -66,6 +69,8 @@ public class MainActivity extends Activity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
+        Log.d(LOG, "savedInstanceState: " + savedInstanceState);
+
         settingsPopup = new SettingsPopup(this);
         settingsPopup.setOnDismissListener(new OnDismissListener() {
 
@@ -75,15 +80,10 @@ public class MainActivity extends Activity implements
         });
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        //try {
         MapsInitializer.initialize(getApplicationContext());
-        //} catch (GooglePlayServicesNotAvailableException ex) {
-        //    Log.e(LOG, ex.toString());
-        //}
-
         gcmHandler = new GcmHandler(this);
         checkServices();
-        buildGUI();
+        buildGUI(savedInstanceState);
 
         Log.d(LOG, "end of onCreate");
     }
@@ -94,14 +94,24 @@ public class MainActivity extends Activity implements
         checkServices();
     }
 
-    private void buildGUI() {
+    private void buildGUI(Bundle savedInstanceState) {
         SpinnerAdapter spinnerAdapter = ArrayAdapter.createFromResource(this, R.array.action_list,
                 android.R.layout.simple_spinner_dropdown_item);
 
-        mapViewFragment = new TaxiTwinMapFragment();
-        listViewFragment = new TaxiTwinListFragment();
-
         FragmentManager fm = getFragmentManager();
+
+        if (savedInstanceState != null) {
+            Log.d(LOG, "loading fragments form bundle...");
+            mapViewFragment = (TaxiTwinMapFragment) fm.getFragment(savedInstanceState, SAVED_MAP_FRAGMENT);
+            listViewFragment = (TaxiTwinListFragment) fm.getFragment(savedInstanceState, SAVED_LIST_FRAGMENT);
+        } else {
+            if (mapViewFragment == null) {
+                mapViewFragment = new TaxiTwinMapFragment();
+            }
+            if (listViewFragment == null) {
+                listViewFragment = new TaxiTwinListFragment();
+            }
+        }
 
         FragmentTransaction ft = fm.beginTransaction();
         ft.add(R.id.main_fragment, mapViewFragment, "Map view");
@@ -138,8 +148,20 @@ public class MainActivity extends Activity implements
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setDisplayShowHomeEnabled(false);
+        if (savedInstanceState != null) {
+            actionBar.setSelectedNavigationItem(savedInstanceState.getInt(SAVED_NAVIGATION_POSITION));
+        }
 
         addWaitForGPSSignal();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        Log.d(LOG, "in onSaveInstanceState");
+        savedInstanceState.putInt(SAVED_NAVIGATION_POSITION, getActionBar().getSelectedNavigationIndex());
+        getFragmentManager().putFragment(savedInstanceState, SAVED_MAP_FRAGMENT, mapViewFragment);
+        getFragmentManager().putFragment(savedInstanceState, SAVED_LIST_FRAGMENT, listViewFragment);
     }
 
     @Override
