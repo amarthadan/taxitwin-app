@@ -158,8 +158,11 @@ public class TaxiTwinMapFragment extends MapFragment implements OnMarkerClickLis
 
         LatLngBounds bounds = builder.build();
 
-        getMap().animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, PADDING));
-        //FIXME if there is only current position marker camera is too close
+        if (tmpList.size() == 1) {
+            getMap().animateCamera(CameraUpdateFactory.newLatLngZoom(currentMarker.getPosition(), 15f));
+        } else {
+            getMap().animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, PADDING));
+        }
     }
 
     public boolean onMarkerClick(Marker marker) {
