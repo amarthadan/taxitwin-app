@@ -1,8 +1,10 @@
 package kimle.michal.android.taxitwin.fragment;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.database.Cursor;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -10,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
@@ -21,10 +24,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import kimle.michal.android.taxitwin.R;
+import kimle.michal.android.taxitwin.activity.OfferDetailActivity;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
 
-public class TaxiTwinMapFragment extends MapFragment {
+public class TaxiTwinMapFragment extends MapFragment implements OnMarkerClickListener {
 
     public interface MapViewListener {
 
@@ -54,6 +58,7 @@ public class TaxiTwinMapFragment extends MapFragment {
                 }
             }
         });
+        getMap().setOnMarkerClickListener(this);
         if (mapViewListener != null) {
             mapViewListener.onMapCreated();
         }
@@ -155,5 +160,21 @@ public class TaxiTwinMapFragment extends MapFragment {
 
         getMap().animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, PADDING));
         //FIXME if there is only current position marker camera is too close
+    }
+
+    public boolean onMarkerClick(Marker marker) {
+        Log.d(LOG, "clicked marker: " + marker);
+        if (!markers.containsKey(marker)) {
+            return false;
+        }
+
+        long id = markers.get(marker);
+
+        Intent i = new Intent(getActivity(), OfferDetailActivity.class);
+        Uri taskUri = Uri.parse(TaxiTwinContentProvider.OFFERS_URI + "/" + id);
+        i.putExtra(TaxiTwinContentProvider.OFFER_CONTENT_ITEM_TYPE, taskUri);
+
+        startActivity(i);
+        return true;
     }
 }
