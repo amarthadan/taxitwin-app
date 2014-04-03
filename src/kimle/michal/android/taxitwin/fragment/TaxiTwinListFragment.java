@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import kimle.michal.android.taxitwin.R;
+import kimle.michal.android.taxitwin.activity.MainActivity;
 import kimle.michal.android.taxitwin.activity.OfferDetailActivity;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
@@ -83,6 +84,6 @@ public class TaxiTwinListFragment extends ListFragment implements LoaderManager.
         Uri taskUri = Uri.parse(TaxiTwinContentProvider.OFFERS_URI + "/" + id);
         i.putExtra(TaxiTwinContentProvider.OFFER_CONTENT_ITEM_TYPE, taskUri);
 
-        startActivity(i);
+        getActivity().startActivityForResult(i, MainActivity.OFFER_DETAIL);
     }
 }

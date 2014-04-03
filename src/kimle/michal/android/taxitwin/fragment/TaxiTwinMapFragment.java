@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import kimle.michal.android.taxitwin.R;
+import kimle.michal.android.taxitwin.activity.MainActivity;
 import kimle.michal.android.taxitwin.activity.OfferDetailActivity;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
@@ -177,7 +178,7 @@ public class TaxiTwinMapFragment extends MapFragment implements OnMarkerClickLis
         Uri taskUri = Uri.parse(TaxiTwinContentProvider.OFFERS_URI + "/" + id);
         i.putExtra(TaxiTwinContentProvider.OFFER_CONTENT_ITEM_TYPE, taskUri);
 
-        startActivity(i);
+        getActivity().startActivityForResult(i, MainActivity.OFFER_DETAIL);
         return true;
     }
 }

@@ -35,4 +35,6 @@
     <string name="pref_gcm_id">pref_gcm_id</string>
     <string name="passengers"> passengers</string>
     <string name="offer_detail">Offer detail</string>
+    <string name="offer_error_title">Offer not found</string>
+    <string name="offer_error_message">Offer you are trying to accept is no longer available</string>
 </resources>

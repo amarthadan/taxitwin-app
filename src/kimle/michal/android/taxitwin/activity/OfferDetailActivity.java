@@ -2,11 +2,14 @@ package kimle.michal.android.taxitwin.activity;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.DialogFragment;
+import android.content.Intent;
 import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -17,17 +20,21 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.skd.centeredcontentbutton.CenteredContentButton;
 import java.util.ArrayList;
 import java.util.List;
 import kimle.michal.android.taxitwin.R;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
+import kimle.michal.android.taxitwin.dialog.error.OfferErrorDialogFragment;
+import kimle.michal.android.taxitwin.gcm.GcmHandler;
 
 public class OfferDetailActivity extends Activity {
 
     private static final int PADDING = 60;
     private LatLng start;
     private LatLng end;
+    private Uri offerUri;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -40,6 +47,7 @@ public class OfferDetailActivity extends Activity {
             taskUri = extras.getParcelable(TaxiTwinContentProvider.OFFER_CONTENT_ITEM_TYPE);
         }
         fillData(taskUri);
+        offerUri = taskUri;
 
         MapsInitializer.initialize(getApplicationContext());
 
@@ -83,6 +91,29 @@ public class OfferDetailActivity extends Activity {
                 map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, PADDING));
             }
         });
+
+        CenteredContentButton accept = (CenteredContentButton) findViewById(R.id.accept_button);
+        accept.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                String[] projection = {DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN};
+                Cursor cursor = getContentResolver().query(offerUri, projection, null, null, null);
+                if (cursor != null) {
+                    cursor.moveToFirst();
+
+                    long taxitwinId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN));
+
+                    intent.putExtra(GcmHandler.GCM_DATA_TAXITWIN_ID, taxitwinId);
+                    setResult(MainActivity.RESULT_ACCEPT_OFFER, intent);
+                } else {
+                    DialogFragment errorFragment = new OfferErrorDialogFragment();
+                    errorFragment.show(getFragmentManager(), "offer_error");
+                    setResult(RESULT_CANCELED, null);
+                }
+
+                finish();
+            }
+        });
     }
 
     private void fillData(Uri taskUri) {
@@ -109,12 +140,6 @@ public class OfferDetailActivity extends Activity {
 
             start = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LONGITUDE_COLUMN)));
             end = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LONGITUDE_COLUMN)));
-            //FIXME the same point
-            //TODO
-            //- wrong anchor on green pin (vertical should be 1-x)
-            //- padding for text
-            //- better size for layouts
-            //- space between "passengers" and numebrs
         }
     }
 

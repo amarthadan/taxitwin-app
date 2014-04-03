@@ -53,12 +53,15 @@ public class MainActivity extends Activity implements
     private static final int LIST_VIEW_POSITION = 1;
     private static final int PLAY_SERVICES_REQUEST = 9000;
     private static final int GPS_REQUEST = 10000;
+    public static final int OFFER_DETAIL = 11000;
     public static final String CATEGORY_DATA_CHANGED = "kimle.michal.android.taxitwin.CATEGORY_DATA_CHANGED";
+    public static final String CATEGORY_OFFER_ACCEPTED = "kimle.michal.android.taxitwin.CATEGORY_OFFER_ACCEPTED";
     private static final String SAVED_NAVIGATION_POSITION = "savedNavigationPosition";
     private static final String SAVED_MAP_FRAGMENT = "savedMapFragment";
     private static final String SAVED_LIST_FRAGMENT = "savedListFragment";
     private static final String SAVED_SUBSCRIBED = "savedSubscribed";
     private static final String SAVED_CURRENT_POSITION = "savedcurrentPosition";
+    public static final int RESULT_ACCEPT_OFFER = 42;
     private LocationManager locationManager;
     private boolean gpsEnabled = false;
     private TaxiTwinMapFragment mapViewFragment;
@@ -179,6 +182,7 @@ public class MainActivity extends Activity implements
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(LOG, "requestCode: " + requestCode);
         switch (requestCode) {
             case PLAY_SERVICES_REQUEST:
                 Log.d(LOG, "result of google play services request");
@@ -188,6 +192,12 @@ public class MainActivity extends Activity implements
                 Log.d(LOG, "result of gps request");
                 checkGPS();
                 break;
+            case OFFER_DETAIL:
+                Log.d(LOG, "offer accepted");
+                Log.d(LOG, "resultCode: " + resultCode);
+                if (resultCode == RESULT_ACCEPT_OFFER) {
+                    acceptOffer(data.getLongExtra(GcmHandler.GCM_DATA_TAXITWIN_ID, 0));
+                }
         }
 
         checkServices();
@@ -343,6 +353,7 @@ public class MainActivity extends Activity implements
             public void onProviderEnabled(String provider) {
                 gpsEnabled = true;
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 3, this);
+                checkServices();
                 Log.d(LOG, "onProviderEnabled");
             }
 
@@ -380,6 +391,7 @@ public class MainActivity extends Activity implements
         setIntent(intent);
 
         Log.d(LOG, "in onNewIntent");
+        Log.d(LOG, "intent: " + intent);
 
         if (intent.hasCategory(CATEGORY_DATA_CHANGED)) {
             notifyChangedData();
@@ -389,5 +401,9 @@ public class MainActivity extends Activity implements
     private void notifyChangedData() {
         listViewFragment.updateView();
         mapViewFragment.loadData();
+    }
+
+    private void acceptOffer(long taxitwinId) {
+        gcmHandler.acceptOffer(taxitwinId);
     }
 }

@@ -27,11 +27,13 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     public static final String GCM_DATA_PASSENGERS = "passengers";
     public static final String GCM_DATA_PASSENGERS_TOTAL = "passengers_total";
     public static final String GCM_DATA_TAXITWIN_ID = "taxitwin_id";
+    public static final String GCM_DATA_OFFER_ID = "offer_id";
     public static final String GCM_DATA_TYPE_SUBSCRIBE = "subscribe";
     public static final String GCM_DATA_TYPE_UNSUBSCRIBE = "unsubscribe";
     public static final String GCM_DATA_TYPE_MODIFY = "modify";
     public static final String GCM_DATA_TYPE_OFFER = "offer";
     public static final String GCM_DATA_TYPE_INVALIDATE = "invalidate";
+    public static final String GCM_DATA_TYPE_ACCEPT_OFFER = "accept_offer";
     private static final String LOG = "GcmHandler";
     private boolean subscribed;
     private Place current;
@@ -206,7 +208,25 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         Bundle data = new Bundle();
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_UNSUBSCRIBE);
 
+        if (!isSubscribed() || !goodToGo) {
+            Log.w(LOG, "cannot unsubscribe - missing service");
+            return;
+        }
+
         gcmConnector.send(data);
         subscribed = false;
+    }
+
+    public void acceptOffer(long taxitwinId) {
+        Bundle data = new Bundle();
+        data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_ACCEPT_OFFER);
+        data.putString(GCM_DATA_TAXITWIN_ID, String.valueOf(taxitwinId));
+
+        if (!isSubscribed() || !goodToGo) {
+            Log.w(LOG, "cannot accept an offer - missing service");
+            return;
+        }
+
+        gcmConnector.send(data);
     }
 }

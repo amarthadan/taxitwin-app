@@ -44,6 +44,9 @@ public class GcmIntentService extends IntentService {
                     if (type.equals(GcmHandler.GCM_DATA_TYPE_INVALIDATE)) {
                         offerInvalidate(extras);
                     }
+                    if (type.equals(GcmHandler.GCM_DATA_TYPE_MODIFY)) {
+                        offerModify(extras);
+                    }
                 }
             }
         }
@@ -103,6 +106,68 @@ public class GcmIntentService extends IntentService {
             Uri uri = Uri.parse(TaxiTwinContentProvider.OFFERS_URI + "/" + offerId);
             getContentResolver().delete(uri, null, null);
             cursor.close();
+        }
+
+        Intent intent = new Intent(ACTION_TAXITWIN);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addCategory(MainActivity.CATEGORY_DATA_CHANGED);
+        intent.addCategory(Intent.CATEGORY_DEFAULT);
+
+        startActivity(intent);
+    }
+
+    private void offerModify(Bundle extras) {
+        ContentValues values = new ContentValues();
+        //modify start position
+        if (extras.containsKey(GcmHandler.GCM_DATA_START_LATITUDE)) {
+            ContentValues startValues = new ContentValues();
+            startValues.put(DbContract.DbEntry.POINT_LATITUDE_COLUMN, extras.getString(GcmHandler.GCM_DATA_START_LATITUDE));
+            startValues.put(DbContract.DbEntry.POINT_LONGITUDE_COLUMN, extras.getString(GcmHandler.GCM_DATA_START_LONGITUDE));
+            startValues.put(DbContract.DbEntry.POINT_TEXTUAL_COLUMN, extras.getString(GcmHandler.GCM_DATA_START_TEXTUAL));
+            long startId = ContentUris.parseId(getContentResolver().insert(TaxiTwinContentProvider.POINTS_URI, startValues));
+            values.put(DbContract.DbEntry.TAXITWIN_START_POINT_ID_COLUMN, startId);
+        }
+        //modify end position
+        if (extras.containsKey(GcmHandler.GCM_DATA_END_LATITUDE)) {
+            ContentValues endValues = new ContentValues();
+            endValues.put(DbContract.DbEntry.POINT_LATITUDE_COLUMN, extras.getString(GcmHandler.GCM_DATA_END_LATITUDE));
+            endValues.put(DbContract.DbEntry.POINT_LONGITUDE_COLUMN, extras.getString(GcmHandler.GCM_DATA_END_LONGITUDE));
+            endValues.put(DbContract.DbEntry.POINT_TEXTUAL_COLUMN, extras.getString(GcmHandler.GCM_DATA_END_TEXTUAL));
+            long endId = ContentUris.parseId(getContentResolver().insert(TaxiTwinContentProvider.POINTS_URI, endValues));
+            values.put(DbContract.DbEntry.TAXITWIN_END_POINT_ID_COLUMN, endId);
+        }
+
+        if (values.size() != 0) {
+            Uri uri = Uri.parse(TaxiTwinContentProvider.TAXITWINS_URI + "/" + extras.getString(GcmHandler.GCM_DATA_ID));
+            getContentResolver().update(uri, values, null, null);
+        }
+
+        values = new ContentValues();
+        //modify number of passengers
+        if (extras.containsKey(GcmHandler.GCM_DATA_PASSENGERS)) {
+            values.put(DbContract.DbEntry.OFFER_PASSENGERS_COLUMN, extras.getString(GcmHandler.GCM_DATA_PASSENGERS));
+        }
+        //modify number of total passengers
+        if (extras.containsKey(GcmHandler.GCM_DATA_PASSENGERS_TOTAL)) {
+            values.put(DbContract.DbEntry.OFFER_PASSENGERS_TOTAL_COLUMN, extras.getString(GcmHandler.GCM_DATA_PASSENGERS_TOTAL));
+        }
+
+        if (values.size() != 0) {
+            String[] projection = {DbContract.DbEntry.OFFER_ID_COLUMN};
+            String selection = DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN + " = ?";
+            String[] selectionArgs = {extras.getString(GcmHandler.GCM_DATA_ID)};
+
+            Cursor cursor = getContentResolver().query(TaxiTwinContentProvider.OFFERS_URI, projection, selection, selectionArgs, null);
+            if (cursor != null) {
+                cursor.moveToFirst();
+                int offerId = cursor.getInt(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
+
+                Uri uri = Uri.parse(TaxiTwinContentProvider.OFFERS_URI + "/" + offerId);
+                getContentResolver().update(uri, values, null, null);
+
+                cursor.close();
+            }
         }
 
         Intent intent = new Intent(ACTION_TAXITWIN);
