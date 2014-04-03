@@ -47,9 +47,11 @@ public class DbContract {
         public static final String RIDE_OFFER_ID_COLUMN = "offer_id";
 
         //as nicknames
+        public static final String AS_START_POINT_ID_COLUMN = "start_id";
         public static final String AS_START_POINT_LATITUDE_COLUMN = "start_latitude";
         public static final String AS_START_POINT_LONGITUDE_COLUMN = "start_longitude";
         public static final String AS_START_POINT_TEXTUAL_COLUMN = "start_textual";
+        public static final String AS_END_POINT_ID_COLUMN = "end_id";
         public static final String AS_END_POINT_LATITUDE_COLUMN = "end_latitude";
         public static final String AS_END_POINT_LONGITUDE_COLUMN = "end_longitude";
         public static final String AS_END_POINT_TEXTUAL_COLUMN = "end_textual";

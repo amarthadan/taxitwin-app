@@ -32,7 +32,6 @@ public class TaxiTwinListFragment extends ListFragment implements LoaderManager.
             DbContract.DbEntry.TAXITWIN_NAME_COLUMN,
             DbContract.DbEntry.AS_START_POINT_TEXTUAL_COLUMN,
             DbContract.DbEntry.AS_END_POINT_TEXTUAL_COLUMN};
-        //FIXME not showing correct data, showing only end point name
 
         int[] to = new int[]{
             R.id.name_text,

@@ -94,17 +94,32 @@ public class GcmIntentService extends IntentService {
     }
 
     private void offerInvalidate(Bundle extras) {
-        String[] projection = {DbContract.DbEntry.OFFER_ID_COLUMN};
+        String taxitwinId = extras.getString(GcmHandler.GCM_DATA_ID);
+        String[] projection = {DbContract.DbEntry.OFFER_ID_COLUMN,
+            DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry._ID + " as " + DbContract.DbEntry.AS_START_POINT_ID_COLUMN,
+            DbContract.DbEntry.POINT_END_TABLE + "." + DbContract.DbEntry._ID + " as " + DbContract.DbEntry.AS_END_POINT_ID_COLUMN};
         String selection = DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN + " = ?";
-        String[] selectionArgs = {extras.getString(GcmHandler.GCM_DATA_ID)};
+        String[] selectionArgs = {taxitwinId};
 
         Cursor cursor = getContentResolver().query(TaxiTwinContentProvider.OFFERS_URI, projection, selection, selectionArgs, null);
         if (cursor != null) {
             cursor.moveToFirst();
-            int offerId = cursor.getInt(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
 
+            int offerId = cursor.getInt(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
             Uri uri = Uri.parse(TaxiTwinContentProvider.OFFERS_URI + "/" + offerId);
             getContentResolver().delete(uri, null, null);
+
+            uri = Uri.parse(TaxiTwinContentProvider.TAXITWINS_URI + "/" + taxitwinId);
+            getContentResolver().delete(uri, null, null);
+
+            int pointId = cursor.getInt(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_ID_COLUMN));
+            uri = Uri.parse(TaxiTwinContentProvider.POINTS_URI + "/" + pointId);
+            getContentResolver().delete(uri, null, null);
+
+            pointId = cursor.getInt(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_ID_COLUMN));
+            uri = Uri.parse(TaxiTwinContentProvider.POINTS_URI + "/" + pointId);
+            getContentResolver().delete(uri, null, null);
+
             cursor.close();
         }
 

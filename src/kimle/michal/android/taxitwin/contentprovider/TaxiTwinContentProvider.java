@@ -22,7 +22,9 @@ public class TaxiTwinContentProvider extends ContentProvider {
     private SQLiteDatabase db;
     private static final String AUTHORITY = "kimle.michal.android.taxitwin.contentprovider";
     private static final int TAXITWINS = 10;
+    private static final int TAXITWINS_ID = 17;
     private static final int POINTS = 11;
+    private static final int POINTS_ID = 16;
     private static final int OFFERS = 12;
     private static final int OFFERS_ID = 15;
     private static final int RESPONSES = 13;
@@ -44,7 +46,9 @@ public class TaxiTwinContentProvider extends ContentProvider {
 
     static {
         sURIMatcher.addURI(AUTHORITY, TAXITWINS_PATH, TAXITWINS);
+        sURIMatcher.addURI(AUTHORITY, TAXITWINS_PATH + "/#", TAXITWINS_ID);
         sURIMatcher.addURI(AUTHORITY, POINTS_PATH, POINTS);
+        sURIMatcher.addURI(AUTHORITY, POINTS_PATH + "/#", POINTS_ID);
         sURIMatcher.addURI(AUTHORITY, OFFERS_PATH, OFFERS);
         sURIMatcher.addURI(AUTHORITY, OFFERS_PATH + "/#", OFFERS_ID);
         sURIMatcher.addURI(AUTHORITY, RESPONSES_PATH, RESPONSES);
@@ -97,8 +101,12 @@ public class TaxiTwinContentProvider extends ContentProvider {
         switch (uriType) {
             case TAXITWINS:
                 return ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + VND + "." + TAXITWINS_PATH;
+            case TAXITWINS_ID:
+                return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + VND + "." + TAXITWINS_PATH;
             case POINTS:
                 return ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + VND + "." + POINTS_PATH;
+            case POINTS_ID:
+                return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + VND + "." + POINTS_PATH;
             case OFFERS:
                 return ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + VND + "." + OFFERS_PATH;
             case OFFERS_ID:
@@ -152,6 +160,16 @@ public class TaxiTwinContentProvider extends ContentProvider {
                         DbContract.DbEntry._ID + "=" + uri.getLastPathSegment(),
                         null);
                 break;
+            case POINTS_ID:
+                rowsDeleted = db.delete(DbContract.DbEntry.POINT_TABLE,
+                        DbContract.DbEntry._ID + "=" + uri.getLastPathSegment(),
+                        null);
+                break;
+            case TAXITWINS_ID:
+                rowsDeleted = db.delete(DbContract.DbEntry.TAXITWIN_TABLE,
+                        DbContract.DbEntry._ID + "=" + uri.getLastPathSegment(),
+                        null);
+                break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
         }
@@ -196,7 +214,9 @@ public class TaxiTwinContentProvider extends ContentProvider {
             DbContract.DbEntry.POINT_END_TABLE + "." + DbContract.DbEntry.POINT_TEXTUAL_COLUMN + " as " + DbContract.DbEntry.AS_END_POINT_TEXTUAL_COLUMN,
             DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_LONGITUDE_COLUMN + " as " + DbContract.DbEntry.AS_START_POINT_LONGITUDE_COLUMN,
             DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_LATITUDE_COLUMN + " as " + DbContract.DbEntry.AS_START_POINT_LATITUDE_COLUMN,
-            DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_TEXTUAL_COLUMN + " as " + DbContract.DbEntry.AS_START_POINT_TEXTUAL_COLUMN
+            DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_TEXTUAL_COLUMN + " as " + DbContract.DbEntry.AS_START_POINT_TEXTUAL_COLUMN,
+            DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry._ID + " as " + DbContract.DbEntry.AS_START_POINT_ID_COLUMN,
+            DbContract.DbEntry.POINT_END_TABLE + "." + DbContract.DbEntry._ID + " as " + DbContract.DbEntry.AS_END_POINT_ID_COLUMN
         };
         if (projection != null) {
             HashSet<String> requestedColumns = new HashSet<String>(Arrays.asList(projection));
