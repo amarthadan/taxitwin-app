@@ -26,28 +26,29 @@ import java.util.List;
 import kimle.michal.android.taxitwin.R;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
-import kimle.michal.android.taxitwin.dialog.error.OfferErrorDialogFragment;
+import kimle.michal.android.taxitwin.dialog.error.ResponseErrorDialogFragment;
 import kimle.michal.android.taxitwin.gcm.GcmHandler;
 
-public class OfferDetailActivity extends Activity {
+public class ResponseDetailActivity extends Activity {
 
+    public static final String RESPONSE_ID = "response_id";
+    private Uri responseUri;
     private static final int PADDING = 60;
     private LatLng start;
     private LatLng end;
-    private Uri offerUri;
 
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        setContentView(R.layout.offer_detail);
+        setContentView(R.layout.response_detail);
 
         Bundle extras = getIntent().getExtras();
-        Uri taskUri = (icicle == null) ? null : (Uri) icicle.getParcelable(TaxiTwinContentProvider.OFFER_CONTENT_ITEM_TYPE);
+        Uri taskUri = (icicle == null) ? null : (Uri) icicle.getParcelable(TaxiTwinContentProvider.RESPONSE_CONTENT_ITEM_TYPE);
         if (extras != null) {
-            taskUri = extras.getParcelable(TaxiTwinContentProvider.OFFER_CONTENT_ITEM_TYPE);
+            taskUri = extras.getParcelable(TaxiTwinContentProvider.RESPONSE_CONTENT_ITEM_TYPE);
         }
         fillData(taskUri);
-        offerUri = taskUri;
+        responseUri = taskUri;
 
         MapsInitializer.initialize(getApplicationContext());
 
@@ -96,18 +97,39 @@ public class OfferDetailActivity extends Activity {
         accept.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent();
-                String[] projection = {DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN};
-                Cursor cursor = getContentResolver().query(offerUri, projection, null, null, null);
+                String[] projection = {DbContract.DbEntry.RESPONSE_TAXITWIN_ID_COLUMN};
+                Cursor cursor = getContentResolver().query(responseUri, projection, null, null, null);
                 if (cursor != null && cursor.getCount() != 0) {
                     cursor.moveToFirst();
 
-                    long taxitwinId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN));
+                    long taxitwinId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry.RESPONSE_TAXITWIN_ID_COLUMN));
 
                     intent.putExtra(GcmHandler.GCM_DATA_TAXITWIN_ID, taxitwinId);
-                    setResult(MainActivity.RESULT_ACCEPT_OFFER, intent);
+                    setResult(ResponsesActivity.RESULT_ACCEPT_RESPONSE, intent);
                 } else {
-                    DialogFragment errorFragment = new OfferErrorDialogFragment();
-                    errorFragment.show(getFragmentManager(), "offer_error");
+                    DialogFragment errorFragment = new ResponseErrorDialogFragment();
+                    errorFragment.show(getFragmentManager(), "response_error");
+                    setResult(RESULT_CANCELED, null);
+                }
+
+                finish();
+            }
+        });
+
+        CenteredContentButton decline = (CenteredContentButton) findViewById(R.id.decline_button);
+        decline.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                String[] projection = {DbContract.DbEntry.RESPONSE_TAXITWIN_ID_COLUMN};
+                Cursor cursor = getContentResolver().query(responseUri, projection, null, null, null);
+                if (cursor != null && cursor.getCount() != 0) {
+                    cursor.moveToFirst();
+
+                    long taxitwinId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry.RESPONSE_TAXITWIN_ID_COLUMN));
+
+                    intent.putExtra(GcmHandler.GCM_DATA_TAXITWIN_ID, taxitwinId);
+                    setResult(ResponsesActivity.RESULT_DECLINE_RESPONSE, intent);
+                } else {
                     setResult(RESULT_CANCELED, null);
                 }
 
@@ -124,9 +146,7 @@ public class OfferDetailActivity extends Activity {
             DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_LONGITUDE_COLUMN + " as " + DbContract.DbEntry.AS_START_POINT_LONGITUDE_COLUMN,
             DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_LATITUDE_COLUMN + " as " + DbContract.DbEntry.AS_START_POINT_LATITUDE_COLUMN,
             DbContract.DbEntry.POINT_START_TABLE + "." + DbContract.DbEntry.POINT_TEXTUAL_COLUMN + " as " + DbContract.DbEntry.AS_START_POINT_TEXTUAL_COLUMN,
-            DbContract.DbEntry.TAXITWIN_NAME_COLUMN,
-            DbContract.DbEntry.OFFER_PASSENGERS_TOTAL_COLUMN,
-            DbContract.DbEntry.OFFER_PASSENGERS_COLUMN};
+            DbContract.DbEntry.TAXITWIN_NAME_COLUMN};
 
         Cursor cursor = getContentResolver().query(taskUri, projection, null, null, null);
         if (cursor != null && cursor.getCount() != 0) {
@@ -135,12 +155,9 @@ public class OfferDetailActivity extends Activity {
             ((TextView) findViewById(R.id.name_content)).setText(cursor.getString(cursor.getColumnIndexOrThrow(DbContract.DbEntry.TAXITWIN_NAME_COLUMN)));
             ((TextView) findViewById(R.id.start_address_content)).setText(cursor.getString(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_TEXTUAL_COLUMN)));
             ((TextView) findViewById(R.id.end_address_content)).setText(cursor.getString(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_TEXTUAL_COLUMN)));
-            String passengersText = cursor.getInt(cursor.getColumnIndexOrThrow(DbContract.DbEntry.OFFER_PASSENGERS_COLUMN)) + "/" + cursor.getInt(cursor.getColumnIndexOrThrow(DbContract.DbEntry.OFFER_PASSENGERS_TOTAL_COLUMN));
-            ((TextView) findViewById(R.id.passengers_content)).setText(passengersText);
 
             start = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LONGITUDE_COLUMN)));
             end = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LONGITUDE_COLUMN)));
         }
     }
-
 }

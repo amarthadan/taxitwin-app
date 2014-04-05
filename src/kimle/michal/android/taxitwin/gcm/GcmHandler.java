@@ -34,6 +34,9 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     public static final String GCM_DATA_TYPE_OFFER = "offer";
     public static final String GCM_DATA_TYPE_INVALIDATE = "invalidate";
     public static final String GCM_DATA_TYPE_ACCEPT_OFFER = "accept_offer";
+    public static final String GCM_DATA_TYPE_RESPONSE = "response";
+    public static final String GCM_DATA_TYPE_ACCEPT_RESPONSE = "accept_response";
+    public static final String GCM_DATA_TYPE_DECLINE_RESPONSE = "decline_response";
     private static final String LOG = "GcmHandler";
     private boolean subscribed;
     private Place current;
@@ -224,6 +227,32 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
 
         if (!isSubscribed() || !goodToGo) {
             Log.w(LOG, "cannot accept an offer - missing service");
+            return;
+        }
+
+        gcmConnector.send(data);
+    }
+
+    public void acceptResponse(long taxitwinId) {
+        Bundle data = new Bundle();
+        data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_ACCEPT_RESPONSE);
+        data.putString(GCM_DATA_TAXITWIN_ID, String.valueOf(taxitwinId));
+
+        if (!isSubscribed() || !goodToGo) {
+            Log.w(LOG, "cannot accept a response - missing service");
+            return;
+        }
+
+        gcmConnector.send(data);
+    }
+
+    public void declineResponse(long taxitwinId) {
+        Bundle data = new Bundle();
+        data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_ACCEPT_RESPONSE);
+        data.putString(GCM_DATA_TAXITWIN_ID, String.valueOf(taxitwinId));
+
+        if (!isSubscribed() || !goodToGo) {
+            Log.w(LOG, "cannot accept a response - missing service");
             return;
         }
 

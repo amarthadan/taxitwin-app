@@ -16,7 +16,7 @@ public class GcmConnector {
 
     private final Context context;
     private GoogleCloudMessaging gcm;
-    private static final int TTL = 0;
+    private static final int TTL = 120;
     private static final String SENDER_ID = "275458664476";
     private static final String GCM_SERVER = "@gcm.googleapis.com";
     private static final String LOG = "GcmConnector";

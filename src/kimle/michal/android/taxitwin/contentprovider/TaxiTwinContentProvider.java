@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -28,6 +29,7 @@ public class TaxiTwinContentProvider extends ContentProvider {
     private static final int OFFERS = 12;
     private static final int OFFERS_ID = 15;
     private static final int RESPONSES = 13;
+    private static final int RESPONSES_ID = 18;
     private static final int RIDES = 14;
     private static final String TAXITWINS_PATH = "taxitwins";
     private static final String POINTS_PATH = "points";
@@ -41,6 +43,8 @@ public class TaxiTwinContentProvider extends ContentProvider {
     public static final Uri RIDES_URI = Uri.parse("content://" + AUTHORITY + "/" + RIDES_PATH);
     public static final String OFFER_CONTENT_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/offers";
     public static final String OFFER_CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/offer";
+    public static final String RESPONSE_CONTENT_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/responses";
+    public static final String RESPONSE_CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/response";
     private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
     private static final String VND = "vnd.kimle.michal.android.taxitwin.contentprovider";
 
@@ -52,6 +56,7 @@ public class TaxiTwinContentProvider extends ContentProvider {
         sURIMatcher.addURI(AUTHORITY, OFFERS_PATH, OFFERS);
         sURIMatcher.addURI(AUTHORITY, OFFERS_PATH + "/#", OFFERS_ID);
         sURIMatcher.addURI(AUTHORITY, RESPONSES_PATH, RESPONSES);
+        sURIMatcher.addURI(AUTHORITY, RESPONSES_PATH + "/#", RESPONSES_ID);
         sURIMatcher.addURI(AUTHORITY, RIDES_PATH, RIDES);
     }
 
@@ -87,6 +92,29 @@ public class TaxiTwinContentProvider extends ContentProvider {
                         + " on " + DbContract.DbEntry.TAXITWIN_END_POINT_ID_COLUMN
                         + " = " + DbContract.DbEntry.POINT_END_ID_COLUMN);
                 break;
+            case TAXITWINS_ID:
+                queryBuilder.appendWhere(DbContract.DbEntry.TAXITWIN_ID_COLUMN + "="
+                        + uri.getLastPathSegment());
+            case TAXITWINS:
+                queryBuilder.setTables(DbContract.DbEntry.TAXITWIN_TABLE);
+                break;
+            case RESPONSES_ID:
+                queryBuilder.appendWhere(DbContract.DbEntry.RESPONSE_ID_COLUMN + "="
+                        + uri.getLastPathSegment());
+            case RESPONSES:
+                queryBuilder.setTables(DbContract.DbEntry.RESPONSE_TABLE
+                        + " inner join " + DbContract.DbEntry.TAXITWIN_TABLE
+                        + " on " + DbContract.DbEntry.TAXITWIN_ID_COLUMN
+                        + " = " + DbContract.DbEntry.RESPONSE_TAXITWIN_ID_COLUMN
+                        + " inner join " + DbContract.DbEntry.POINT_TABLE
+                        + " as " + DbContract.DbEntry.POINT_START_TABLE
+                        + " on " + DbContract.DbEntry.TAXITWIN_START_POINT_ID_COLUMN
+                        + " = " + DbContract.DbEntry.POINT_START_ID_COLUMN
+                        + " inner join " + DbContract.DbEntry.POINT_TABLE
+                        + " as " + DbContract.DbEntry.POINT_END_TABLE
+                        + " on " + DbContract.DbEntry.TAXITWIN_END_POINT_ID_COLUMN
+                        + " = " + DbContract.DbEntry.POINT_END_ID_COLUMN);
+                break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
         }
@@ -113,6 +141,8 @@ public class TaxiTwinContentProvider extends ContentProvider {
                 return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + VND + "." + OFFERS_PATH;
             case RESPONSES:
                 return ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + VND + "." + RESPONSES_PATH;
+            case RESPONSES_ID:
+                return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + VND + "." + RESPONSES_PATH;
             case RIDES:
                 return ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + VND + "." + RIDES_PATH;
             default:
@@ -153,33 +183,73 @@ public class TaxiTwinContentProvider extends ContentProvider {
         int uriType = sURIMatcher.match(uri);
         db = dbHelper.getWritableDatabase();
         int rowsDeleted;
+        String tableName;
 
         switch (uriType) {
             case OFFERS_ID:
-                rowsDeleted = db.delete(DbContract.DbEntry.OFFER_TABLE,
-                        DbContract.DbEntry._ID + "=" + uri.getLastPathSegment(),
-                        null);
+                tableName = DbContract.DbEntry.OFFER_TABLE;
                 break;
             case POINTS_ID:
-                rowsDeleted = db.delete(DbContract.DbEntry.POINT_TABLE,
-                        DbContract.DbEntry._ID + "=" + uri.getLastPathSegment(),
-                        null);
+                tableName = DbContract.DbEntry.POINT_TABLE;
                 break;
             case TAXITWINS_ID:
-                rowsDeleted = db.delete(DbContract.DbEntry.TAXITWIN_TABLE,
-                        DbContract.DbEntry._ID + "=" + uri.getLastPathSegment(),
-                        null);
+                tableName = DbContract.DbEntry.TAXITWIN_TABLE;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
         }
+
+        String id = uri.getLastPathSegment();
+        if (TextUtils.isEmpty(selection)) {
+            rowsDeleted = db.delete(tableName,
+                    DbContract.DbEntry._ID + "=" + id,
+                    null);
+        } else {
+            rowsDeleted = db.delete(tableName,
+                    DbContract.DbEntry._ID + "=" + id
+                    + " and " + selection,
+                    selectionArgs);
+        }
+
         getContext().getContentResolver().notifyChange(uri, null);
         return rowsDeleted;
     }
 
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        int uriType = sURIMatcher.match(uri);
+        db = dbHelper.getWritableDatabase();
+        int rowsUpdated;
+        String tableName;
+
+        switch (uriType) {
+            case OFFERS_ID:
+                tableName = DbContract.DbEntry.OFFER_TABLE;
+                break;
+            case POINTS_ID:
+                tableName = DbContract.DbEntry.POINT_TABLE;
+                break;
+            case TAXITWINS_ID:
+                tableName = DbContract.DbEntry.TAXITWIN_TABLE;
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown URI: " + uri);
+        }
+
+        String id = uri.getLastPathSegment();
+        if (TextUtils.isEmpty(selection)) {
+            rowsUpdated = db.update(tableName, values,
+                    DbContract.DbEntry._ID + "=" + id,
+                    null);
+        } else {
+            rowsUpdated = db.update(tableName, values,
+                    DbContract.DbEntry._ID + "=" + id
+                    + " and " + selection,
+                    selectionArgs);
+        }
+
+        getContext().getContentResolver().notifyChange(uri, null);
+        return rowsUpdated;
     }
 
     private void checkColumns(String[] projection) {

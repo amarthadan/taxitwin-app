@@ -31,12 +31,12 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.MapsInitializer;
 import kimle.michal.android.taxitwin.R;
+import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
 import kimle.michal.android.taxitwin.db.DbHelper;
 import kimle.michal.android.taxitwin.dialog.alert.GPSAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.GooglePlayServicesAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.InternetAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.error.GooglePlayServicesErrorDialogFragment;
-import kimle.michal.android.taxitwin.entity.Place;
 import kimle.michal.android.taxitwin.fragment.TaxiTwinListFragment;
 import kimle.michal.android.taxitwin.fragment.TaxiTwinMapFragment;
 import kimle.michal.android.taxitwin.gcm.GcmHandler;
@@ -54,13 +54,13 @@ public class MainActivity extends Activity implements
     private static final int PLAY_SERVICES_REQUEST = 9000;
     private static final int GPS_REQUEST = 10000;
     public static final int OFFER_DETAIL = 11000;
-    public static final String CATEGORY_DATA_CHANGED = "kimle.michal.android.taxitwin.CATEGORY_DATA_CHANGED";
+    public static final String CATEGORY_OFFER_DATA_CHANGED = "kimle.michal.android.taxitwin.CATEGORY_OFFER_DATA_CHANGED";
     public static final String CATEGORY_OFFER_ACCEPTED = "kimle.michal.android.taxitwin.CATEGORY_OFFER_ACCEPTED";
     private static final String SAVED_NAVIGATION_POSITION = "savedNavigationPosition";
     private static final String SAVED_MAP_FRAGMENT = "savedMapFragment";
     private static final String SAVED_LIST_FRAGMENT = "savedListFragment";
-    private static final String SAVED_SUBSCRIBED = "savedSubscribed";
-    private static final String SAVED_CURRENT_POSITION = "savedcurrentPosition";
+//    private static final String SAVED_SUBSCRIBED = "savedSubscribed";
+//    private static final String SAVED_CURRENT_POSITION = "savedcurrentPosition";
     public static final int RESULT_ACCEPT_OFFER = 42;
     private LocationManager locationManager;
     private boolean gpsEnabled = false;
@@ -68,7 +68,7 @@ public class MainActivity extends Activity implements
     private TaxiTwinListFragment listViewFragment;
     private SettingsPopup settingsPopup;
     private MenuItem settingsMenuItem;
-    private GcmHandler gcmHandler;
+    //private GcmHandler gcmHandler;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -87,11 +87,11 @@ public class MainActivity extends Activity implements
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         MapsInitializer.initialize(getApplicationContext());
-        if (savedInstanceState != null) {
-            gcmHandler = new GcmHandler(this, savedInstanceState.getBoolean(SAVED_SUBSCRIBED), (Place) savedInstanceState.getParcelable(SAVED_CURRENT_POSITION));
-        } else {
-            gcmHandler = new GcmHandler(this);
-        }
+//        if (savedInstanceState != null) {
+//            gcmHandler = new GcmHandler(this, savedInstanceState.getBoolean(SAVED_SUBSCRIBED), (Place) savedInstanceState.getParcelable(SAVED_CURRENT_POSITION));
+//        } else {
+//            gcmHandler = new GcmHandler(this);
+//        }
         checkServices();
         buildGUI(savedInstanceState);
 
@@ -176,8 +176,8 @@ public class MainActivity extends Activity implements
         savedInstanceState.putInt(SAVED_NAVIGATION_POSITION, getActionBar().getSelectedNavigationIndex());
         getFragmentManager().putFragment(savedInstanceState, SAVED_MAP_FRAGMENT, mapViewFragment);
         getFragmentManager().putFragment(savedInstanceState, SAVED_LIST_FRAGMENT, listViewFragment);
-        savedInstanceState.putBoolean(SAVED_SUBSCRIBED, gcmHandler.isSubscribed());
-        savedInstanceState.putParcelable(SAVED_CURRENT_POSITION, gcmHandler.getCurrentLocation());
+//        savedInstanceState.putBoolean(SAVED_SUBSCRIBED, gcmHandler.isSubscribed());
+//        savedInstanceState.putParcelable(SAVED_CURRENT_POSITION, gcmHandler.getCurrentLocation());
     }
 
     @Override
@@ -232,6 +232,8 @@ public class MainActivity extends Activity implements
                 }
                 return true;
             case R.id.action_responses:
+                Intent i = new Intent(this, ResponsesActivity.class);
+                startActivity(i);
                 return true;
             case R.id.action_exit:
                 exit();
@@ -276,7 +278,7 @@ public class MainActivity extends Activity implements
     }
 
     private void exit() {
-        gcmHandler.unsubscribe();
+        TaxiTwinApplication.getGcmHandler().unsubscribe();
         DbHelper dbHelper = new DbHelper(this);
         dbHelper.deleteTables(dbHelper.getWritableDatabase());
         android.os.Process.killProcess(android.os.Process.myPid());
@@ -328,7 +330,7 @@ public class MainActivity extends Activity implements
     }
 
     private void checkServices() {
-        gcmHandler.setGoodToGo(checkGooglePlayServices() && checkGPS() && checkInternet());
+        TaxiTwinApplication.getGcmHandler().setGoodToGo(checkGooglePlayServices() && checkGPS() && checkInternet());
     }
 
     private void requestLocationChanges() {
@@ -342,7 +344,7 @@ public class MainActivity extends Activity implements
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the gps location provider.
                 mapViewFragment.updateCurrentLocation(location);
-                gcmHandler.locationChanged(location);
+                TaxiTwinApplication.getGcmHandler().locationChanged(location);
                 removeWaitForGPSSignal();
                 Log.d(LOG, "onLocationChanged");
             }
@@ -393,7 +395,7 @@ public class MainActivity extends Activity implements
         Log.d(LOG, "in onNewIntent");
         Log.d(LOG, "intent: " + intent);
 
-        if (intent.hasCategory(CATEGORY_DATA_CHANGED)) {
+        if (intent.hasCategory(CATEGORY_OFFER_DATA_CHANGED)) {
             notifyChangedData();
         }
     }
@@ -404,6 +406,6 @@ public class MainActivity extends Activity implements
     }
 
     private void acceptOffer(long taxitwinId) {
-        gcmHandler.acceptOffer(taxitwinId);
+        TaxiTwinApplication.getGcmHandler().acceptOffer(taxitwinId);
     }
 }

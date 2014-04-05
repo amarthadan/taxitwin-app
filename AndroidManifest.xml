@@ -30,7 +30,8 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES"/>
 
-    <application android:label="@string/app_name" android:icon="@drawable/ic_launcher" android:allowBackup="false">
+    <application android:label="@string/app_name" android:icon="@drawable/ic_launcher"
+                 android:name=".application.TaxiTwinApplication" android:allowBackup="false">
         <activity android:name=".activity.MainActivity"
                   android:label="@string/app_name"
                   android:launchMode="singleTop">
@@ -41,7 +42,7 @@
             <intent-filter>
                 <action android:name="kimle.michal.android.taxitwin.ACTION_TAXITWIN" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="kimle.michal.android.taxitwin.CATEGORY_DATA_CHANGED" />
+                <category android:name="kimle.michal.android.taxitwin.CATEGORY_OFFER_DATA_CHANGED" />
             </intent-filter>
         </activity>
         <activity android:name=".activity.OfferDetailActivity"
@@ -50,6 +51,25 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="kimle.michal.android.taxitwin.activity.MainActivity" />
+        </activity>
+        <activity android:name=".activity.ResponsesActivity"
+                  android:label="@string/responses"
+                  android:parentActivityName="kimle.michal.android.taxitwin.activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="kimle.michal.android.taxitwin.activity.MainActivity" />
+            <intent-filter>
+                <action android:name="kimle.michal.android.taxitwin.ACTION_TAXITWIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="kimle.michal.android.taxitwin.CATEGORY_RESPONSE_DATA_CHANGED" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".activity.ResponseDetailActivity"
+                  android:label="@string/response_detail"
+                  android:parentActivityName="kimle.michal.android.taxitwin.activity.ResponsesActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="kimle.michal.android.taxitwin.activity.ResponsesActivity" />
         </activity>
         <provider
             android:name="kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider"

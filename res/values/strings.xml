@@ -37,4 +37,11 @@
     <string name="offer_detail">Offer detail</string>
     <string name="offer_error_title">Offer not found</string>
     <string name="offer_error_message">Offer you are trying to accept is no longer available</string>
+    <string name="responses">Responses</string>
+    <string name="response_detail">Response detail</string>
+    <string name="notification_title">TaxiTwin response</string>
+    <string name="notification_content">You have new TaxiTwin responses</string>
+    <string name="decline">Decline</string>
+    <string name="response_error_title">Response not found</string>
+    <string name="response_error_message">Response you are trying to accept is no longer available</string>
 </resources>

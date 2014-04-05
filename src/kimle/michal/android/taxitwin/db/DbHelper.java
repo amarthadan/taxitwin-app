@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DbHelper extends SQLiteOpenHelper {
 
-    public static final int DATABASE_VERSION = 17;
+    public static final int DATABASE_VERSION = 18;
     public static final String DATABASE = "taxitwin.db";
 
     //taxitwin table
@@ -43,7 +43,7 @@ public class DbHelper extends SQLiteOpenHelper {
             + DbContract.DbEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + DbContract.DbEntry.RESPONSE_TAXITWIN_ID_COLUMN + " INTEGER NOT NULL REFERENCES "
             + DbContract.DbEntry.TAXITWIN_TABLE + "("
-            + DbContract.DbEntry._ID + "));";
+            + DbContract.DbEntry._ID + ") ON DELETE CASCADE);";
     private static final String RESPONSE_TABLE_DROP
             = "DROP TABLE IF EXISTS " + DbContract.DbEntry.RESPONSE_TABLE + ";";
     private static final String RESPONSE_TABLE_DELETE
@@ -55,7 +55,7 @@ public class DbHelper extends SQLiteOpenHelper {
             + DbContract.DbEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN + " INTEGER NOT NULL REFERENCES "
             + DbContract.DbEntry.TAXITWIN_TABLE + "("
-            + DbContract.DbEntry._ID + "), "
+            + DbContract.DbEntry._ID + ") ON DELETE CASCADE, "
             + DbContract.DbEntry.OFFER_PASSENGERS_TOTAL_COLUMN + " INTEGER NOT NULL, "
             + DbContract.DbEntry.OFFER_PASSENGERS_COLUMN + " INTEGER NOT NULL);";
     private static final String OFFER_TABLE_DROP
