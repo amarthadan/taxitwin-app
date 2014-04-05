@@ -65,7 +65,7 @@ public class OfferDetailActivity extends Activity {
                 MarkerOptions markerOptions = new MarkerOptions();
                 markerOptions.position(start);
                 markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.pin));
-                markerOptions.anchor(0.07f, 0.93f);
+                markerOptions.anchor(0.34f, 0.92f);
                 markers.add(map.addMarker(markerOptions));
 
                 markerOptions.position(end);
