@@ -195,6 +195,9 @@ public class TaxiTwinContentProvider extends ContentProvider {
             case TAXITWINS_ID:
                 tableName = DbContract.DbEntry.TAXITWIN_TABLE;
                 break;
+            case RESPONSES_ID:
+                tableName = DbContract.DbEntry.RESPONSE_TABLE;
+                break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
         }

@@ -22,6 +22,7 @@ import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
 import kimle.michal.android.taxitwin.gcm.GcmHandler;
 import kimle.michal.android.taxitwin.gcm.GcmIntentService;
+import static kimle.michal.android.taxitwin.gcm.GcmIntentService.ACTION_TAXITWIN;
 
 public class ResponsesActivity extends ListActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -137,11 +138,30 @@ public class ResponsesActivity extends ListActivity implements LoaderManager.Loa
                 if (resultCode == RESULT_DECLINE_RESPONSE) {
                     declineResponse(data.getLongExtra(GcmHandler.GCM_DATA_TAXITWIN_ID, 0));
                 }
+                if (resultCode == RESULT_ACCEPT_RESPONSE || resultCode == RESULT_DECLINE_RESPONSE) {
+                    String[] projection = {DbContract.DbEntry.RESPONSE_ID_COLUMN};
+                    String selection = DbContract.DbEntry.RESPONSE_TAXITWIN_ID_COLUMN + " = ?";
+                    String[] selectionArgs = {String.valueOf(data.getLongExtra(GcmHandler.GCM_DATA_TAXITWIN_ID, 0))};
+
+                    Cursor cursor = getContentResolver().query(TaxiTwinContentProvider.RESPONSES_URI, projection, selection, selectionArgs, null);
+                    if (cursor != null && cursor.getCount() != 0) {
+                        cursor.moveToFirst();
+                        long responseId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
+                        Uri uri = Uri.parse(TaxiTwinContentProvider.RESPONSES_URI + "/" + responseId);
+                        getContentResolver().delete(uri, null, null);
+
+                        Intent intent = new Intent(ACTION_TAXITWIN);
+                        intent.addCategory(CATEGORY_RESPONSE_DATA_CHANGED);
+
+                        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                    }
+                }
         }
     }
 
     private void acceptResponse(long taxitwinId) {
         TaxiTwinApplication.getGcmHandler().acceptResponse(taxitwinId);
+        //TODO switching to MyTaxiTwin activity and so on...
     }
 
     private void declineResponse(long taxitwinId) {

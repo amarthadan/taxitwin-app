@@ -248,11 +248,11 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
 
     public void declineResponse(long taxitwinId) {
         Bundle data = new Bundle();
-        data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_ACCEPT_RESPONSE);
+        data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_DECLINE_RESPONSE);
         data.putString(GCM_DATA_TAXITWIN_ID, String.valueOf(taxitwinId));
 
         if (!isSubscribed() || !goodToGo) {
-            Log.w(LOG, "cannot accept a response - missing service");
+            Log.w(LOG, "cannot decline a response - missing service");
             return;
         }
 
