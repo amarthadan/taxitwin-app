@@ -12,6 +12,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.media.AudioManager;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
@@ -235,15 +237,17 @@ public class GcmIntentService extends IntentService {
         ComponentName componentInfo = taskInfo.get(0).topActivity;
         if (componentInfo.getClassName().equals(ResponsesActivity.class.getName())) {
             Intent intent = new Intent(ACTION_TAXITWIN);
-            intent.addCategory(MainActivity.CATEGORY_OFFER_DATA_CHANGED);
+            intent.addCategory(ResponsesActivity.CATEGORY_RESPONSE_DATA_CHANGED);
 
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         } else {
-            NotificationCompat.Builder mBuilder
+            NotificationCompat.Builder builder
                     = new NotificationCompat.Builder(this)
                     .setSmallIcon(R.drawable.notification_icon)
                     .setContentTitle(getResources().getString(R.string.notification_title))
-                    .setContentText(getResources().getString(R.string.notification_content));
+                    .setContentText(getResources().getString(R.string.notification_content))
+                    .setAutoCancel(true)
+                    .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), AudioManager.STREAM_NOTIFICATION);
 
             TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
             Intent resultIntent;
@@ -259,10 +263,10 @@ public class GcmIntentService extends IntentService {
 
             stackBuilder.addNextIntent(resultIntent);
             PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-            mBuilder.setContentIntent(resultPendingIntent);
-            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            builder.setContentIntent(resultPendingIntent);
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-            mNotificationManager.notify(TaxiTwinApplication.getPendingNotificationsCount(), mBuilder.build());
+            notificationManager.notify(TaxiTwinApplication.getPendingNotificationsCount(), builder.build());
             TaxiTwinApplication.setPendingNotificationsCount(TaxiTwinApplication.getPendingNotificationsCount() + 1);
         }
     }
