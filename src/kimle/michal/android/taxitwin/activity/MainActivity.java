@@ -7,8 +7,10 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
@@ -17,6 +19,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -40,6 +43,7 @@ import kimle.michal.android.taxitwin.dialog.error.GooglePlayServicesErrorDialogF
 import kimle.michal.android.taxitwin.fragment.TaxiTwinListFragment;
 import kimle.michal.android.taxitwin.fragment.TaxiTwinMapFragment;
 import kimle.michal.android.taxitwin.gcm.GcmHandler;
+import kimle.michal.android.taxitwin.gcm.GcmIntentService;
 import kimle.michal.android.taxitwin.popup.SettingsPopup;
 
 public class MainActivity extends Activity implements
@@ -69,6 +73,7 @@ public class MainActivity extends Activity implements
     private SettingsPopup settingsPopup;
     private MenuItem settingsMenuItem;
     //private GcmHandler gcmHandler;
+    private BroadcastReceiver broadcastReceiver;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -92,6 +97,18 @@ public class MainActivity extends Activity implements
 //        } else {
 //            gcmHandler = new GcmHandler(this);
 //        }
+
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.d(LOG, "in onReceive");
+                Log.d(LOG, "intent: " + intent);
+                if (intent.hasCategory(CATEGORY_OFFER_DATA_CHANGED)) {
+                    notifyChangedData();
+                }
+            }
+        };
+
         checkServices();
         buildGUI(savedInstanceState);
 
@@ -100,8 +117,21 @@ public class MainActivity extends Activity implements
 
     @Override
     protected void onResume() {
+        Log.d(LOG, "in onResume");
         super.onResume();
+        notifyChangedData();
+        IntentFilter intentFiler = new IntentFilter();
+        intentFiler.addAction(GcmIntentService.ACTION_TAXITWIN);
+        intentFiler.addCategory(CATEGORY_OFFER_DATA_CHANGED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFiler);
         checkServices();
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d(LOG, "in onPause");
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     }
 
     private void buildGUI(Bundle savedInstanceState) {
@@ -387,19 +417,18 @@ public class MainActivity extends Activity implements
         }
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent);
-
-        Log.d(LOG, "in onNewIntent");
-        Log.d(LOG, "intent: " + intent);
-
-        if (intent.hasCategory(CATEGORY_OFFER_DATA_CHANGED)) {
-            notifyChangedData();
-        }
-    }
-
+//    @Override
+//    protected void onNewIntent(Intent intent) {
+//        super.onNewIntent(intent);
+//        setIntent(intent);
+//
+//        Log.d(LOG, "in onNewIntent");
+//        Log.d(LOG, "intent: " + intent);
+//
+//        if (intent.hasCategory(CATEGORY_OFFER_DATA_CHANGED)) {
+//            notifyChangedData();
+//        }
+//    }
     private void notifyChangedData() {
         listViewFragment.updateView();
         mapViewFragment.loadData();

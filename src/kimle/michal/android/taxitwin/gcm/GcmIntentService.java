@@ -15,6 +15,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import java.util.List;
@@ -101,12 +102,9 @@ public class GcmIntentService extends IntentService {
         getContentResolver().insert(TaxiTwinContentProvider.OFFERS_URI, values);
 
         Intent intent = new Intent(ACTION_TAXITWIN);
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.addCategory(MainActivity.CATEGORY_OFFER_DATA_CHANGED);
-        intent.addCategory(Intent.CATEGORY_DEFAULT);
 
-        startActivity(intent);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     private void taxitwinInvalidate(Bundle extras) {
@@ -117,7 +115,7 @@ public class GcmIntentService extends IntentService {
         Uri uri = Uri.parse(TaxiTwinContentProvider.TAXITWINS_URI + "/" + extras.getString(GcmHandler.GCM_DATA_ID));
 
         Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
-        if (cursor != null) {
+        if (cursor != null && cursor.getCount() != 0) {
             cursor.moveToFirst();
 
             uri = Uri.parse(TaxiTwinContentProvider.TAXITWINS_URI + "/" + taxitwinId);
@@ -135,12 +133,9 @@ public class GcmIntentService extends IntentService {
         }
 
         Intent intent = new Intent(ACTION_TAXITWIN);
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.addCategory(MainActivity.CATEGORY_OFFER_DATA_CHANGED);
-        intent.addCategory(Intent.CATEGORY_DEFAULT);
 
-        startActivity(intent);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     private void offerModify(Bundle extras) {
@@ -197,12 +192,9 @@ public class GcmIntentService extends IntentService {
         }
 
         Intent intent = new Intent(ACTION_TAXITWIN);
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.addCategory(MainActivity.CATEGORY_OFFER_DATA_CHANGED);
-        intent.addCategory(Intent.CATEGORY_DEFAULT);
 
-        startActivity(intent);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     private void responseReceived(Bundle extras) {
@@ -243,12 +235,9 @@ public class GcmIntentService extends IntentService {
         ComponentName componentInfo = taskInfo.get(0).topActivity;
         if (componentInfo.getClassName().equals(ResponsesActivity.class.getName())) {
             Intent intent = new Intent(ACTION_TAXITWIN);
-            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.addCategory(MainActivity.CATEGORY_OFFER_DATA_CHANGED);
-            intent.addCategory(Intent.CATEGORY_DEFAULT);
 
-            startActivity(intent);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         } else {
             NotificationCompat.Builder mBuilder
                     = new NotificationCompat.Builder(this)

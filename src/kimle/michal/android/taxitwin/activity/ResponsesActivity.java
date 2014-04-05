@@ -3,12 +3,16 @@ package kimle.michal.android.taxitwin.activity;
 import android.app.ActionBar;
 import android.app.ListActivity;
 import android.app.LoaderManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -17,6 +21,7 @@ import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
 import kimle.michal.android.taxitwin.gcm.GcmHandler;
+import kimle.michal.android.taxitwin.gcm.GcmIntentService;
 
 public class ResponsesActivity extends ListActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -25,6 +30,7 @@ public class ResponsesActivity extends ListActivity implements LoaderManager.Loa
     public static final String CATEGORY_RESPONSE_DATA_CHANGED = "kimle.michal.android.taxitwin.CATEGORY_RESPONSE_DATA_CHANGED";
     public static final int RESULT_ACCEPT_RESPONSE = 74;
     public static final int RESULT_DECLINE_RESPONSE = 75;
+    private BroadcastReceiver broadcastReceiver;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -35,7 +41,32 @@ public class ResponsesActivity extends ListActivity implements LoaderManager.Loa
         actionBar.setDisplayShowHomeEnabled(false);
         actionBar.setDisplayHomeAsUpEnabled(true);
 
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.hasCategory(CATEGORY_RESPONSE_DATA_CHANGED)) {
+                    updateView();
+                }
+            }
+        };
+
         setupAdapter();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateView();
+        IntentFilter intentFiler = new IntentFilter();
+        intentFiler.addAction(GcmIntentService.ACTION_TAXITWIN);
+        intentFiler.addCategory(CATEGORY_RESPONSE_DATA_CHANGED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFiler);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     }
 
     private void setupAdapter() {
@@ -84,16 +115,6 @@ public class ResponsesActivity extends ListActivity implements LoaderManager.Loa
     public void updateView() {
         getLoaderManager().restartLoader(0, null, this);
         adapter.notifyDataSetChanged();
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent);
-
-        if (intent.hasCategory(CATEGORY_RESPONSE_DATA_CHANGED)) {
-            updateView();
-        }
     }
 
     @Override
