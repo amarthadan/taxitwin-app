@@ -55,4 +55,5 @@
     <string name="leave_taxitwin_alert_message">Are you sure you want to leave current TaxiTwin?</string>
     <string name="no">No</string>
     <string name="yes">Yes</string>
+    <string name="my_taxitwin">My TaxiTwin</string>
 </resources>

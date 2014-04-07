@@ -40,7 +40,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-<!--            <intent-filter>
+            <!--            <intent-filter>
                 <action android:name="kimle.michal.android.taxitwin.ACTION_TAXITWIN" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="kimle.michal.android.taxitwin.CATEGORY_OFFER_DATA_CHANGED" />
@@ -66,6 +66,9 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="kimle.michal.android.taxitwin.activity.ResponsesActivity" />
+        </activity>
+        <activity android:name=".activity.MyTaxiTwinActivity"
+                  android:label="@string/my_taxitwin">
         </activity>
         <provider
             android:name="kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider"

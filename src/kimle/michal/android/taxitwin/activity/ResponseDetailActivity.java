@@ -28,10 +28,10 @@ import com.skd.centeredcontentbutton.CenteredContentButton;
 import java.util.ArrayList;
 import java.util.List;
 import kimle.michal.android.taxitwin.R;
+import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
 import kimle.michal.android.taxitwin.dialog.error.ResponseErrorDialogFragment;
-import kimle.michal.android.taxitwin.gcm.GcmHandler;
 import kimle.michal.android.taxitwin.gcm.GcmIntentService;
 
 public class ResponseDetailActivity extends Activity {
@@ -111,16 +111,15 @@ public class ResponseDetailActivity extends Activity {
         CenteredContentButton accept = (CenteredContentButton) findViewById(R.id.accept_button);
         accept.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent intent = new Intent();
                 String[] projection = {DbContract.DbEntry.RESPONSE_TAXITWIN_ID_COLUMN};
                 Cursor cursor = getContentResolver().query(responseUri, projection, null, null, null);
                 if (cursor != null && cursor.getCount() != 0) {
                     cursor.moveToFirst();
-
                     long taxitwinId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry.RESPONSE_TAXITWIN_ID_COLUMN));
 
-                    intent.putExtra(GcmHandler.GCM_DATA_TAXITWIN_ID, taxitwinId);
-                    setResult(ResponsesActivity.RESULT_ACCEPT_RESPONSE, intent);
+                    deleteResponse(taxitwinId);
+                    acceptResponse(taxitwinId);
+
                 } else {
                     DialogFragment errorFragment = new ResponseErrorDialogFragment();
                     errorFragment.show(getFragmentManager(), "response_error");
@@ -134,7 +133,6 @@ public class ResponseDetailActivity extends Activity {
         CenteredContentButton decline = (CenteredContentButton) findViewById(R.id.decline_button);
         decline.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent intent = new Intent();
                 String[] projection = {DbContract.DbEntry.RESPONSE_TAXITWIN_ID_COLUMN};
                 Cursor cursor = getContentResolver().query(responseUri, projection, null, null, null);
                 if (cursor != null && cursor.getCount() != 0) {
@@ -142,15 +140,15 @@ public class ResponseDetailActivity extends Activity {
 
                     long taxitwinId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry.RESPONSE_TAXITWIN_ID_COLUMN));
 
-                    intent.putExtra(GcmHandler.GCM_DATA_TAXITWIN_ID, taxitwinId);
-                    setResult(ResponsesActivity.RESULT_DECLINE_RESPONSE, intent);
-                } else {
-                    setResult(RESULT_CANCELED, null);
+                    deleteResponse(taxitwinId);
+                    declineResponse(taxitwinId);
                 }
 
                 finish();
             }
         });
+
+        TaxiTwinApplication.setPendingNotificationsCount(0);
     }
 
     @Override
@@ -191,10 +189,38 @@ public class ResponseDetailActivity extends Activity {
 
             start = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LONGITUDE_COLUMN)));
             end = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LONGITUDE_COLUMN)));
+        } else {
+            finish();
         }
     }
 
     private void showTaxiTwinDialog() {
         MyTaxiTwinActivity.showTaxiTwinDialog(this);
+    }
+
+    private void deleteResponse(long taxitwinId) {
+        String[] projection = {DbContract.DbEntry.RESPONSE_ID_COLUMN};
+        String selection = DbContract.DbEntry.RESPONSE_TAXITWIN_ID_COLUMN + " = ?";
+        String[] selectionArgs = {String.valueOf(taxitwinId)};
+
+        Cursor cursor = getContentResolver().query(TaxiTwinContentProvider.RESPONSES_URI, projection, selection, selectionArgs, null);
+        if (cursor != null && cursor.getCount() != 0) {
+            cursor.moveToFirst();
+            long responseId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
+            Uri uri = Uri.parse(TaxiTwinContentProvider.RESPONSES_URI + "/" + responseId);
+            getContentResolver().delete(uri, null, null);
+        }
+    }
+
+    private void acceptResponse(long taxitwinId) {
+        TaxiTwinApplication.getGcmHandler().acceptResponse(taxitwinId);
+
+        Intent intent = new Intent(this, MyTaxiTwinActivity.class);
+        intent.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_OWNER);
+        startActivity(intent);
+    }
+
+    private void declineResponse(long taxitwinId) {
+        TaxiTwinApplication.getGcmHandler().declineResponse(taxitwinId);
     }
 }

@@ -394,7 +394,7 @@ public class MyTaxiTwinActivity extends Activity implements
 
     public static boolean isInTaxiTwin(Context context) {
         String[] projection = {DbContract.DbEntry.OFFER_ID_COLUMN};
-        Cursor cursor = context.getContentResolver().query(TaxiTwinContentProvider.RESPONSES_URI, projection, null, null, null);
+        Cursor cursor = context.getContentResolver().query(TaxiTwinContentProvider.RIDES_URI, projection, null, null, null);
         return (cursor != null && cursor.getCount() != 0);
     }
 

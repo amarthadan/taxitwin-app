@@ -114,6 +114,7 @@ public class TaxiTwinContentProvider extends ContentProvider {
                         + " as " + DbContract.DbEntry.POINT_END_TABLE
                         + " on " + DbContract.DbEntry.TAXITWIN_END_POINT_ID_COLUMN
                         + " = " + DbContract.DbEntry.POINT_END_ID_COLUMN);
+                break;
             case RIDES:
                 queryBuilder.setTables(DbContract.DbEntry.RIDE_TABLE
                         + " inner join " + DbContract.DbEntry.OFFER_TABLE
