@@ -37,6 +37,8 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     public static final String GCM_DATA_TYPE_RESPONSE = "response";
     public static final String GCM_DATA_TYPE_ACCEPT_RESPONSE = "accept_response";
     public static final String GCM_DATA_TYPE_DECLINE_RESPONSE = "decline_response";
+    public static final String GCM_DATA_TYPE_TAXITWIN = "taxitwin";
+    public static final String GCM_DATA_TYPE_LEAVE_TAXITWIN = "leave_taxitwin";
     private static final String LOG = "GcmHandler";
     private boolean subscribed;
     private Place current;
@@ -105,7 +107,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         return (current.isFilled() && destination.isFilled() && radius > 0 && passengers > 0);
     }
 
-    private void sendNewOffer() {
+    public void sendNewOffer() {
         Log.d(LOG, "in sendNewOffer");
         if (!hasAllData() || !goodToGo) {
             Log.w(LOG, "cannot send new offer - missing data or service");
@@ -186,7 +188,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
 //        return Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
 //    }
 
-    private String getUserName() {
+    public String getUserName() {
 //        Cursor c = context.getContentResolver().query(ContactsContract.Profile.CONTENT_URI, null, null, null, null);
 //        c.moveToFirst();
 //        String name = c.getString(c.getColumnIndex("display_name"));
@@ -256,6 +258,19 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
             return;
         }
 
+        gcmConnector.send(data);
+    }
+
+    public void leaveTaxiTwin() {
+        Bundle data = new Bundle();
+        data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_LEAVE_TAXITWIN);
+
+        if (!isSubscribed() || !goodToGo) {
+            Log.w(LOG, "cannot decline a response - missing service");
+            return;
+        }
+
+        subscribed = false;
         gcmConnector.send(data);
     }
 }

@@ -23,6 +23,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import java.util.List;
 import kimle.michal.android.taxitwin.R;
 import kimle.michal.android.taxitwin.activity.MainActivity;
+import kimle.michal.android.taxitwin.activity.MyTaxiTwinActivity;
 import kimle.michal.android.taxitwin.activity.ResponseDetailActivity;
 import kimle.michal.android.taxitwin.activity.ResponsesActivity;
 import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
@@ -65,6 +66,9 @@ public class GcmIntentService extends IntentService {
                     }
                     if (type.equals(GcmHandler.GCM_DATA_TYPE_RESPONSE)) {
                         responseReceived(extras);
+                    }
+                    if (type.equals(GcmHandler.GCM_DATA_TYPE_TAXITWIN)) {
+                        enterTaxiTwin(extras);
                     }
                 }
             }
@@ -184,7 +188,7 @@ public class GcmIntentService extends IntentService {
             Cursor cursor = getContentResolver().query(TaxiTwinContentProvider.OFFERS_URI, projection, selection, selectionArgs, null);
             if (cursor != null && cursor.getCount() != 0) {
                 cursor.moveToFirst();
-                int offerId = cursor.getInt(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
+                long offerId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
 
                 Uri uri = Uri.parse(TaxiTwinContentProvider.OFFERS_URI + "/" + offerId);
                 getContentResolver().update(uri, values, null, null);
@@ -244,8 +248,8 @@ public class GcmIntentService extends IntentService {
             NotificationCompat.Builder builder
                     = new NotificationCompat.Builder(this)
                     .setSmallIcon(R.drawable.notification_icon)
-                    .setContentTitle(getResources().getString(R.string.notification_title))
-                    .setContentText(getResources().getString(R.string.notification_content))
+                    .setContentTitle(getResources().getString(R.string.response_notification_title))
+                    .setContentText(getResources().getString(R.string.response_notification_content))
                     .setAutoCancel(true)
                     .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), AudioManager.STREAM_NOTIFICATION);
 
@@ -269,5 +273,86 @@ public class GcmIntentService extends IntentService {
             notificationManager.notify(TaxiTwinApplication.getPendingNotificationsCount(), builder.build());
             TaxiTwinApplication.setPendingNotificationsCount(TaxiTwinApplication.getPendingNotificationsCount() + 1);
         }
+    }
+
+    private void enterTaxiTwin(Bundle extras) {
+        String[] projection = {DbContract.DbEntry.OFFER_ID_COLUMN};
+        String selection = DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN + " = ?";
+        String[] selectionArgs = {extras.getString(GcmHandler.GCM_DATA_ID)};
+        long offerId;
+
+        Cursor cursor = getContentResolver().query(TaxiTwinContentProvider.OFFERS_URI, projection, selection, selectionArgs, null);
+        if (cursor != null && cursor.getCount() != 0) {
+            cursor.moveToFirst();
+            offerId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
+        } else {
+            ContentValues values = new ContentValues();
+            //storing start point
+            values.put(DbContract.DbEntry.POINT_LATITUDE_COLUMN, extras.getString(GcmHandler.GCM_DATA_START_LATITUDE));
+            values.put(DbContract.DbEntry.POINT_LONGITUDE_COLUMN, extras.getString(GcmHandler.GCM_DATA_START_LONGITUDE));
+            values.put(DbContract.DbEntry.POINT_TEXTUAL_COLUMN, extras.getString(GcmHandler.GCM_DATA_START_TEXTUAL));
+            long startId = ContentUris.parseId(getContentResolver().insert(TaxiTwinContentProvider.POINTS_URI, values));
+
+            //storing end point
+            values = new ContentValues();
+            values.put(DbContract.DbEntry.POINT_LATITUDE_COLUMN, extras.getString(GcmHandler.GCM_DATA_END_LATITUDE));
+            values.put(DbContract.DbEntry.POINT_LONGITUDE_COLUMN, extras.getString(GcmHandler.GCM_DATA_END_LONGITUDE));
+            values.put(DbContract.DbEntry.POINT_TEXTUAL_COLUMN, extras.getString(GcmHandler.GCM_DATA_END_TEXTUAL));
+            long endId = ContentUris.parseId(getContentResolver().insert(TaxiTwinContentProvider.POINTS_URI, values));
+
+            //storing taxitwin
+            values = new ContentValues();
+            values.put(DbContract.DbEntry._ID, extras.getString(GcmHandler.GCM_DATA_ID));
+            values.put(DbContract.DbEntry.TAXITWIN_START_POINT_ID_COLUMN, startId);
+            values.put(DbContract.DbEntry.TAXITWIN_END_POINT_ID_COLUMN, endId);
+            values.put(DbContract.DbEntry.TAXITWIN_NAME_COLUMN, extras.getString(GcmHandler.GCM_DATA_NAME));
+            getContentResolver().insert(TaxiTwinContentProvider.TAXITWINS_URI, values);
+
+            //storing offer
+            values = new ContentValues();
+            values.put(DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN, extras.getString(GcmHandler.GCM_DATA_ID));
+            values.put(DbContract.DbEntry.OFFER_PASSENGERS_COLUMN, extras.getString(GcmHandler.GCM_DATA_PASSENGERS));
+            values.put(DbContract.DbEntry.OFFER_PASSENGERS_TOTAL_COLUMN, extras.getString(GcmHandler.GCM_DATA_PASSENGERS_TOTAL));
+            offerId = ContentUris.parseId(getContentResolver().insert(TaxiTwinContentProvider.OFFERS_URI, values));
+        }
+
+        ContentValues values = new ContentValues();
+        values.put(DbContract.DbEntry.RIDE_OFFER_ID_COLUMN, offerId);
+
+        getContentResolver().insert(TaxiTwinContentProvider.RIDES_URI, values);
+
+        if (isAppInForeground()) {
+            Intent intent = new Intent(ACTION_TAXITWIN);
+            intent.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED);
+
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        } else {
+            NotificationCompat.Builder builder
+                    = new NotificationCompat.Builder(this)
+                    .setSmallIcon(R.drawable.notification_icon)
+                    .setContentTitle(getResources().getString(R.string.taxitwin_notification_title))
+                    .setContentText(getResources().getString(R.string.taxitwin_notification_content))
+                    .setAutoCancel(true)
+                    .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), AudioManager.STREAM_NOTIFICATION);
+
+            TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+            Intent resultIntent;
+            resultIntent = new Intent(this, MainActivity.class);
+            stackBuilder.addParentStack(MainActivity.class);
+            stackBuilder.addNextIntent(resultIntent);
+            PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+            builder.setContentIntent(resultPendingIntent);
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            notificationManager.notify(1, builder.build());
+        }
+    }
+
+    private boolean isAppInForeground() {
+        List<RunningTaskInfo> task = ((ActivityManager) getSystemService(Context.ACTIVITY_SERVICE)).getRunningTasks(1);
+        if (task.isEmpty()) {
+            return false;
+        }
+        return task.get(0).topActivity.getPackageName().equalsIgnoreCase(getPackageName());
     }
 }

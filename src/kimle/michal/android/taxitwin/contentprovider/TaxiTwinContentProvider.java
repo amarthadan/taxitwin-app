@@ -114,6 +114,22 @@ public class TaxiTwinContentProvider extends ContentProvider {
                         + " as " + DbContract.DbEntry.POINT_END_TABLE
                         + " on " + DbContract.DbEntry.TAXITWIN_END_POINT_ID_COLUMN
                         + " = " + DbContract.DbEntry.POINT_END_ID_COLUMN);
+            case RIDES:
+                queryBuilder.setTables(DbContract.DbEntry.RIDE_TABLE
+                        + " inner join " + DbContract.DbEntry.OFFER_TABLE
+                        + " on " + DbContract.DbEntry.OFFER_ID_COLUMN
+                        + " = " + DbContract.DbEntry.RIDE_OFFER_ID_COLUMN
+                        + " inner join " + DbContract.DbEntry.TAXITWIN_TABLE
+                        + " on " + DbContract.DbEntry.TAXITWIN_ID_COLUMN
+                        + " = " + DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN
+                        + " inner join " + DbContract.DbEntry.POINT_TABLE
+                        + " as " + DbContract.DbEntry.POINT_START_TABLE
+                        + " on " + DbContract.DbEntry.TAXITWIN_START_POINT_ID_COLUMN
+                        + " = " + DbContract.DbEntry.POINT_START_ID_COLUMN
+                        + " inner join " + DbContract.DbEntry.POINT_TABLE
+                        + " as " + DbContract.DbEntry.POINT_END_TABLE
+                        + " on " + DbContract.DbEntry.TAXITWIN_END_POINT_ID_COLUMN
+                        + " = " + DbContract.DbEntry.POINT_END_ID_COLUMN);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
@@ -198,6 +214,8 @@ public class TaxiTwinContentProvider extends ContentProvider {
             case RESPONSES_ID:
                 tableName = DbContract.DbEntry.RESPONSE_TABLE;
                 break;
+            case RIDES:
+                return db.delete(DbContract.DbEntry.RIDE_TABLE, null, null);
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
         }

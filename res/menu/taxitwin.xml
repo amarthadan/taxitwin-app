@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/action_leave_taxitwin"
+          android:icon="@drawable/ic_action_cancel"
+          android:title="@string/action_leave_taxitwin"
+          android:showAsAction="ifRoom"/>
+    <item android:id="@+id/action_responses"
+          android:title="@string/action_responses" />
+    <item android:id="@+id/action_exit"
+          android:title="@string/action_exit" />
+</menu>

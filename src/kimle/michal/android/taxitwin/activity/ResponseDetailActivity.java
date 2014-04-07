@@ -3,12 +3,16 @@ package kimle.michal.android.taxitwin.activity;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.DialogFragment;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 import android.widget.TextView;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -28,6 +32,7 @@ import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
 import kimle.michal.android.taxitwin.dialog.error.ResponseErrorDialogFragment;
 import kimle.michal.android.taxitwin.gcm.GcmHandler;
+import kimle.michal.android.taxitwin.gcm.GcmIntentService;
 
 public class ResponseDetailActivity extends Activity {
 
@@ -36,6 +41,7 @@ public class ResponseDetailActivity extends Activity {
     private static final int PADDING = 60;
     private LatLng start;
     private LatLng end;
+    private BroadcastReceiver broadcastReceiver;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -49,6 +55,15 @@ public class ResponseDetailActivity extends Activity {
         }
         fillData(taskUri);
         responseUri = taskUri;
+
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.hasCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED)) {
+                    showTaxiTwinDialog();
+                }
+            }
+        };
 
         MapsInitializer.initialize(getApplicationContext());
 
@@ -138,6 +153,24 @@ public class ResponseDetailActivity extends Activity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (MyTaxiTwinActivity.isInTaxiTwin(this)) {
+            showTaxiTwinDialog();
+        }
+        IntentFilter intentFiler = new IntentFilter();
+        intentFiler.addAction(GcmIntentService.ACTION_TAXITWIN);
+        intentFiler.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFiler);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+    }
+
     private void fillData(Uri taskUri) {
         String[] projection = {
             DbContract.DbEntry.POINT_END_TABLE + "." + DbContract.DbEntry.POINT_LONGITUDE_COLUMN + " as " + DbContract.DbEntry.AS_END_POINT_LONGITUDE_COLUMN,
@@ -159,5 +192,9 @@ public class ResponseDetailActivity extends Activity {
             start = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LONGITUDE_COLUMN)));
             end = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LONGITUDE_COLUMN)));
         }
+    }
+
+    private void showTaxiTwinDialog() {
+        MyTaxiTwinActivity.showTaxiTwinDialog(this);
     }
 }

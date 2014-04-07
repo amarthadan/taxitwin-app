@@ -67,6 +67,7 @@ public class MainActivity extends Activity implements
 //    private static final String SAVED_CURRENT_POSITION = "savedcurrentPosition";
     public static final int RESULT_ACCEPT_OFFER = 42;
     private LocationManager locationManager;
+    private LocationListener locationListener;
     private boolean gpsEnabled = false;
     private TaxiTwinMapFragment mapViewFragment;
     private TaxiTwinListFragment listViewFragment;
@@ -106,6 +107,9 @@ public class MainActivity extends Activity implements
                 if (intent.hasCategory(CATEGORY_OFFER_DATA_CHANGED)) {
                     notifyChangedData();
                 }
+                if (intent.hasCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED)) {
+                    showTaxiTwinDialog();
+                }
             }
         };
 
@@ -119,10 +123,14 @@ public class MainActivity extends Activity implements
     protected void onResume() {
         Log.d(LOG, "in onResume");
         super.onResume();
+        if (MyTaxiTwinActivity.isInTaxiTwin(this)) {
+            showTaxiTwinDialog();
+        }
         notifyChangedData();
         IntentFilter intentFiler = new IntentFilter();
         intentFiler.addAction(GcmIntentService.ACTION_TAXITWIN);
         intentFiler.addCategory(CATEGORY_OFFER_DATA_CHANGED);
+        intentFiler.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFiler);
         checkServices();
     }
@@ -132,6 +140,7 @@ public class MainActivity extends Activity implements
         Log.d(LOG, "in onPause");
         super.onPause();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+        //locationManager.removeUpdates(locationListener);
     }
 
     private void buildGUI(Bundle savedInstanceState) {
@@ -294,7 +303,7 @@ public class MainActivity extends Activity implements
                 if (alertDialog != null) {
                     GooglePlayServicesAlertDialogFragment alertFragment = new GooglePlayServicesAlertDialogFragment();
                     alertFragment.setDialog(alertDialog);
-                    alertFragment.show(getFragmentManager(), "Google Play Services alert");
+                    alertFragment.show(getFragmentManager(), "google_play_services_alert");
                 }
             }
             DialogFragment errorFragment = new GooglePlayServicesErrorDialogFragment();
@@ -370,7 +379,7 @@ public class MainActivity extends Activity implements
 //        lr.setInterval(20000);
 //        //every 5 seconds top
 //        lr.setFastestInterval(5000);
-        LocationListener locationListener = new LocationListener() {
+        locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the gps location provider.
                 mapViewFragment.updateCurrentLocation(location);
@@ -436,5 +445,9 @@ public class MainActivity extends Activity implements
 
     private void acceptOffer(long taxitwinId) {
         TaxiTwinApplication.getGcmHandler().acceptOffer(taxitwinId);
+    }
+
+    private void showTaxiTwinDialog() {
+        MyTaxiTwinActivity.showTaxiTwinDialog(this);
     }
 }

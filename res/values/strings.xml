@@ -39,9 +39,20 @@
     <string name="offer_error_message">Offer you are trying to accept is no longer available</string>
     <string name="responses">Responses</string>
     <string name="response_detail">Response detail</string>
-    <string name="notification_title">TaxiTwin response</string>
-    <string name="notification_content">You have new TaxiTwin responses</string>
+    <string name="response_notification_title">TaxiTwin response</string>
+    <string name="response_notification_content">You have new TaxiTwin responses</string>
     <string name="decline">Decline</string>
     <string name="response_error_title">Response not found</string>
     <string name="response_error_message">Response you are trying to accept is no longer available</string>
+    <string name="action_leave_taxitwin">Leave TaxiTwin</string>
+    <string name="taxitwin_notification_title">TaxiTwin</string>
+    <string name="taxitwin_notification_content">You are now part of a TaxiTwin</string>
+    <string name="taxitwin_alert_title">TaxiTwin</string>
+    <string name="taxitwin_alert_message">One of your responses were accepted. You are now part of a TaxiTwin.</string>
+    <string name="enter">Enter</string>
+    <string name="leave">Leave</string>
+    <string name="leave_taxitwin_alert_title">You are about to leave TaxiTwin</string>
+    <string name="leave_taxitwin_alert_message">Are you sure you want to leave current TaxiTwin?</string>
+    <string name="no">No</string>
+    <string name="yes">Yes</string>
 </resources>

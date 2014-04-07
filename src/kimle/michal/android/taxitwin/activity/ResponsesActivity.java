@@ -48,6 +48,9 @@ public class ResponsesActivity extends ListActivity implements LoaderManager.Loa
                 if (intent.hasCategory(CATEGORY_RESPONSE_DATA_CHANGED)) {
                     updateView();
                 }
+                if (intent.hasCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED)) {
+                    showTaxiTwinDialog();
+                }
             }
         };
 
@@ -57,10 +60,14 @@ public class ResponsesActivity extends ListActivity implements LoaderManager.Loa
     @Override
     protected void onResume() {
         super.onResume();
+        if (MyTaxiTwinActivity.isInTaxiTwin(this)) {
+            showTaxiTwinDialog();
+        }
         updateView();
         IntentFilter intentFiler = new IntentFilter();
         intentFiler.addAction(GcmIntentService.ACTION_TAXITWIN);
         intentFiler.addCategory(CATEGORY_RESPONSE_DATA_CHANGED);
+        intentFiler.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFiler);
     }
 
@@ -161,10 +168,17 @@ public class ResponsesActivity extends ListActivity implements LoaderManager.Loa
 
     private void acceptResponse(long taxitwinId) {
         TaxiTwinApplication.getGcmHandler().acceptResponse(taxitwinId);
-        //TODO switching to MyTaxiTwin activity and so on...
+
+        Intent intent = new Intent(this, MyTaxiTwinActivity.class);
+        intent.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_OWNER);
+        startActivity(intent);
     }
 
     private void declineResponse(long taxitwinId) {
         TaxiTwinApplication.getGcmHandler().declineResponse(taxitwinId);
+    }
+
+    private void showTaxiTwinDialog() {
+        MyTaxiTwinActivity.showTaxiTwinDialog(this);
     }
 }
