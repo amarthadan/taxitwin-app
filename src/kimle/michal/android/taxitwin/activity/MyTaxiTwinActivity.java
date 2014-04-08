@@ -4,6 +4,7 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -103,7 +104,7 @@ public class MyTaxiTwinActivity extends Activity implements
         };
 
         ActionBar actionBar = getActionBar();
-        actionBar.setDisplayShowTitleEnabled(false);
+        actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setDisplayShowHomeEnabled(false);
 
         fillData();
@@ -122,6 +123,8 @@ public class MyTaxiTwinActivity extends Activity implements
         });
 
         checkServices();
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(GcmIntentService.NOTIFICATION_TAXITWIN);
     }
 
     @Override
@@ -270,7 +273,10 @@ public class MyTaxiTwinActivity extends Activity implements
                     Log.d(LOG, "geocoder present");
                     try {
                         Address address = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1).get(0);
-                        addressString = address.toString();
+                        addressString = address.getAddressLine(0);
+                        for (int i = 1; i <= address.getMaxAddressLineIndex(); i++) {
+                            addressString = addressString + ", " + address.getAddressLine(i);
+                        }
                     } catch (IOException ex) {
                         Log.e(LOG, ex.getMessage());
                     }
@@ -293,6 +299,8 @@ public class MyTaxiTwinActivity extends Activity implements
                     taxitwinId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
                     Uri uri = Uri.parse(TaxiTwinContentProvider.TAXITWINS_URI + "/" + taxitwinId);
                     getContentResolver().update(uri, values, null, null);
+
+                    cursor.close();
                 }
 
                 fillData();
@@ -342,6 +350,8 @@ public class MyTaxiTwinActivity extends Activity implements
 
             start = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LONGITUDE_COLUMN)));
             end = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LONGITUDE_COLUMN)));
+
+            cursor.close();
         }
 
         if (mapReady) {
@@ -350,6 +360,10 @@ public class MyTaxiTwinActivity extends Activity implements
     }
 
     private void fillMap() {
+        if (start == null || end == null) {
+            return;
+        }
+
         if (markers != null) {
             for (Marker m : markers) {
                 m.remove();
@@ -395,7 +409,11 @@ public class MyTaxiTwinActivity extends Activity implements
     public static boolean isInTaxiTwin(Context context) {
         String[] projection = {DbContract.DbEntry.OFFER_ID_COLUMN};
         Cursor cursor = context.getContentResolver().query(TaxiTwinContentProvider.RIDES_URI, projection, null, null, null);
-        return (cursor != null && cursor.getCount() != 0);
+        if (cursor != null && cursor.getCount() != 0) {
+            cursor.close();
+            return true;
+        }
+        return false;
     }
 
     public static void showTaxiTwinDialog(Activity activity) {

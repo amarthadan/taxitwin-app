@@ -3,6 +3,7 @@ package kimle.michal.android.taxitwin.activity;
 import android.app.ActionBar;
 import android.app.ListActivity;
 import android.app.LoaderManager;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.CursorLoader;
@@ -53,7 +54,10 @@ public class ResponsesActivity extends ListActivity implements LoaderManager.Loa
         };
 
         setupAdapter();
+
         TaxiTwinApplication.setPendingNotificationsCount(0);
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(GcmIntentService.NOTIFICATION_RESPONSE);
     }
 
     @Override

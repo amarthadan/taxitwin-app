@@ -120,6 +120,8 @@ public class OfferDetailActivity extends Activity {
 
                     intent.putExtra(GcmHandler.GCM_DATA_TAXITWIN_ID, taxitwinId);
                     setResult(MainActivity.RESULT_ACCEPT_OFFER, intent);
+
+                    cursor.close();
                 } else {
                     DialogFragment errorFragment = new OfferErrorDialogFragment();
                     errorFragment.show(getFragmentManager(), "offer_error");
@@ -173,6 +175,8 @@ public class OfferDetailActivity extends Activity {
 
             start = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LONGITUDE_COLUMN)));
             end = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LONGITUDE_COLUMN)));
+
+            cursor.close();
         }
     }
 

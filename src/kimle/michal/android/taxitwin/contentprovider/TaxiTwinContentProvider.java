@@ -217,6 +217,8 @@ public class TaxiTwinContentProvider extends ContentProvider {
                 break;
             case RIDES:
                 return db.delete(DbContract.DbEntry.RIDE_TABLE, null, null);
+            case TAXITWINS:
+                return db.delete(DbContract.DbEntry.TAXITWIN_TABLE, null, null);
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
         }

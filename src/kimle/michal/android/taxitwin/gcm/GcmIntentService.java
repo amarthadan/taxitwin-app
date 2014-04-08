@@ -34,6 +34,8 @@ public class GcmIntentService extends IntentService {
 
     private static final String LOG = "GcmIntentService";
     public static final String ACTION_TAXITWIN = "kimle.michal.android.taxitwin.ACTION_TAXITWIN";
+    public static final int NOTIFICATION_RESPONSE = 111;
+    public static final int NOTIFICATION_TAXITWIN = 222;
 
     public GcmIntentService() {
         super("GcmIntentService");
@@ -230,6 +232,8 @@ public class GcmIntentService extends IntentService {
             values.put(DbContract.DbEntry.TAXITWIN_END_POINT_ID_COLUMN, endId);
             values.put(DbContract.DbEntry.TAXITWIN_NAME_COLUMN, extras.getString(GcmHandler.GCM_DATA_NAME));
             getContentResolver().insert(TaxiTwinContentProvider.TAXITWINS_URI, values);
+        } else {
+            cursor.close();
         }
 
         ContentValues values = new ContentValues();
@@ -263,6 +267,7 @@ public class GcmIntentService extends IntentService {
             } else {
                 resultIntent = new Intent(this, ResponsesActivity.class);
                 stackBuilder.addParentStack(ResponsesActivity.class);
+                builder.setNumber(TaxiTwinApplication.getPendingNotificationsCount() + 1);
             }
 
             stackBuilder.addNextIntent(resultIntent);
@@ -270,7 +275,7 @@ public class GcmIntentService extends IntentService {
             builder.setContentIntent(resultPendingIntent);
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-            notificationManager.notify(TaxiTwinApplication.getPendingNotificationsCount(), builder.build());
+            notificationManager.notify(NOTIFICATION_RESPONSE, builder.build());
             TaxiTwinApplication.setPendingNotificationsCount(TaxiTwinApplication.getPendingNotificationsCount() + 1);
         }
     }
@@ -285,6 +290,8 @@ public class GcmIntentService extends IntentService {
         if (cursor != null && cursor.getCount() != 0) {
             cursor.moveToFirst();
             offerId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
+
+            cursor.close();
         } else {
             ContentValues values = new ContentValues();
             //storing start point
@@ -344,7 +351,7 @@ public class GcmIntentService extends IntentService {
             builder.setContentIntent(resultPendingIntent);
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-            notificationManager.notify(1, builder.build());
+            notificationManager.notify(NOTIFICATION_TAXITWIN, builder.build());
         }
     }
 

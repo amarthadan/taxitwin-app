@@ -3,6 +3,7 @@ package kimle.michal.android.taxitwin.activity;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.DialogFragment;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -120,6 +121,7 @@ public class ResponseDetailActivity extends Activity {
                     deleteResponse(taxitwinId);
                     acceptResponse(taxitwinId);
 
+                    cursor.close();
                 } else {
                     DialogFragment errorFragment = new ResponseErrorDialogFragment();
                     errorFragment.show(getFragmentManager(), "response_error");
@@ -142,6 +144,8 @@ public class ResponseDetailActivity extends Activity {
 
                     deleteResponse(taxitwinId);
                     declineResponse(taxitwinId);
+
+                    cursor.close();
                 }
 
                 finish();
@@ -149,6 +153,8 @@ public class ResponseDetailActivity extends Activity {
         });
 
         TaxiTwinApplication.setPendingNotificationsCount(0);
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(GcmIntentService.NOTIFICATION_RESPONSE);
     }
 
     @Override
@@ -189,6 +195,8 @@ public class ResponseDetailActivity extends Activity {
 
             start = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_START_POINT_LONGITUDE_COLUMN)));
             end = new LatLng(cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LATITUDE_COLUMN)), cursor.getDouble(cursor.getColumnIndexOrThrow(DbContract.DbEntry.AS_END_POINT_LONGITUDE_COLUMN)));
+
+            cursor.close();
         } else {
             finish();
         }
@@ -209,6 +217,8 @@ public class ResponseDetailActivity extends Activity {
             long responseId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
             Uri uri = Uri.parse(TaxiTwinContentProvider.RESPONSES_URI + "/" + responseId);
             getContentResolver().delete(uri, null, null);
+
+            cursor.close();
         }
     }
 

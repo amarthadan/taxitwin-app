@@ -69,7 +69,7 @@ public class DbHelper extends SQLiteOpenHelper {
             + DbContract.DbEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + DbContract.DbEntry.RIDE_OFFER_ID_COLUMN + " INTEGER NOT NULL REFERENCES "
             + DbContract.DbEntry.OFFER_TABLE + "("
-            + DbContract.DbEntry._ID + "));";
+            + DbContract.DbEntry._ID + ") ON DELETE CASCADE);";
     private static final String RIDE_TABLE_DROP
             = "DROP TABLE IF EXISTS " + DbContract.DbEntry.RIDE_TABLE + ";";
     private static final String RIDE_TABLE_DELETE
