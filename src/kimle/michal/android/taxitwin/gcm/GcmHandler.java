@@ -39,6 +39,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     public static final String GCM_DATA_TYPE_DECLINE_RESPONSE = "decline_response";
     public static final String GCM_DATA_TYPE_TAXITWIN = "taxitwin";
     public static final String GCM_DATA_TYPE_LEAVE_TAXITWIN = "leave_taxitwin";
+    public static final String GCM_DATA_TYPE_NO_LONGER = "no_longer";
     private static final String LOG = "GcmHandler";
     private boolean subscribed;
     private Place current;

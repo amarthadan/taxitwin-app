@@ -139,10 +139,10 @@ public class OfferDetailActivity extends Activity {
         if (MyTaxiTwinActivity.isInTaxiTwin(this)) {
             showTaxiTwinDialog();
         }
-        IntentFilter intentFiler = new IntentFilter();
-        intentFiler.addAction(GcmIntentService.ACTION_TAXITWIN);
-        intentFiler.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED);
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFiler);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(GcmIntentService.ACTION_TAXITWIN);
+        intentFilter.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
     }
 
     @Override

@@ -67,11 +67,11 @@ public class ResponsesActivity extends ListActivity implements LoaderManager.Loa
             showTaxiTwinDialog();
         }
         updateView();
-        IntentFilter intentFiler = new IntentFilter();
-        intentFiler.addAction(GcmIntentService.ACTION_TAXITWIN);
-        intentFiler.addCategory(CATEGORY_RESPONSE_DATA_CHANGED);
-        intentFiler.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED);
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFiler);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(GcmIntentService.ACTION_TAXITWIN);
+        intentFilter.addCategory(CATEGORY_RESPONSE_DATA_CHANGED);
+        intentFilter.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
     }
 
     @Override

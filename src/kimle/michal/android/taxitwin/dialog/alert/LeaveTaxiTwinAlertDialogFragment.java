@@ -22,11 +22,10 @@ public class LeaveTaxiTwinAlertDialogFragment extends DialogFragment {
                     public void onClick(DialogInterface dialog, int id) {
                         TaxiTwinApplication.getGcmHandler().leaveTaxiTwin();
                         getActivity().getContentResolver().delete(TaxiTwinContentProvider.RIDES_URI, null, null);
-                        getActivity().getContentResolver().delete(TaxiTwinContentProvider.TAXITWINS_URI, null, null);
-                        TaxiTwinApplication.getGcmHandler().sendNewOffer();
 
                         Intent intent = new Intent(getActivity(), MainActivity.class);
                         getActivity().startActivity(intent);
+                        dismiss();
                     }
                 })
                 .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {

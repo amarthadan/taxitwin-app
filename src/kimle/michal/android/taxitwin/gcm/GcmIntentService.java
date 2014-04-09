@@ -36,6 +36,7 @@ public class GcmIntentService extends IntentService {
     public static final String ACTION_TAXITWIN = "kimle.michal.android.taxitwin.ACTION_TAXITWIN";
     public static final int NOTIFICATION_RESPONSE = 111;
     public static final int NOTIFICATION_TAXITWIN = 222;
+    public static final int NOTIFICATION_TAXITWIN_NO_LONGER = 333;
 
     public GcmIntentService() {
         super("GcmIntentService");
@@ -71,6 +72,9 @@ public class GcmIntentService extends IntentService {
                     }
                     if (type.equals(GcmHandler.GCM_DATA_TYPE_TAXITWIN)) {
                         enterTaxiTwin(extras);
+                    }
+                    if (type.equals(GcmHandler.GCM_DATA_TYPE_NO_LONGER)) {
+                        noLonger(extras);
                     }
                 }
             }
@@ -352,6 +356,36 @@ public class GcmIntentService extends IntentService {
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
             notificationManager.notify(NOTIFICATION_TAXITWIN, builder.build());
+        }
+    }
+
+    private void noLonger(Bundle extras) {
+        getContentResolver().delete(TaxiTwinContentProvider.RIDES_URI, null, null);
+
+        if (isAppInForeground()) {
+            Intent intent = new Intent(ACTION_TAXITWIN);
+            intent.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_NO_LONGER);
+
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        } else {
+            NotificationCompat.Builder builder
+                    = new NotificationCompat.Builder(this)
+                    .setSmallIcon(R.drawable.notification_icon)
+                    .setContentTitle(getResources().getString(R.string.taxitwin_no_longer_notification_title))
+                    .setContentText(getResources().getString(R.string.taxitwin_no_longer_notification_content))
+                    .setAutoCancel(true)
+                    .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), AudioManager.STREAM_NOTIFICATION);
+
+            TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+            Intent resultIntent;
+            resultIntent = new Intent(this, MainActivity.class);
+            stackBuilder.addParentStack(MainActivity.class);
+            stackBuilder.addNextIntent(resultIntent);
+            PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+            builder.setContentIntent(resultPendingIntent);
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            notificationManager.notify(NOTIFICATION_TAXITWIN_NO_LONGER, builder.build());
         }
     }
 

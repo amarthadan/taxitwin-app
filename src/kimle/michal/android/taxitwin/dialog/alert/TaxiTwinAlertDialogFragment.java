@@ -18,6 +18,7 @@ public class TaxiTwinAlertDialogFragment extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(R.string.taxitwin_alert_message)
                 .setTitle(R.string.taxitwin_alert_title)
+                .setCancelable(false)
                 .setPositiveButton(R.string.enter, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         Intent intent = new Intent(getActivity(), MyTaxiTwinActivity.class);
@@ -28,7 +29,6 @@ public class TaxiTwinAlertDialogFragment extends DialogFragment {
                     public void onClick(DialogInterface dialog, int id) {
                         TaxiTwinApplication.getGcmHandler().leaveTaxiTwin();
                         getActivity().getContentResolver().delete(TaxiTwinContentProvider.RIDES_URI, null, null);
-                        getActivity().getContentResolver().delete(TaxiTwinContentProvider.TAXITWINS_URI, null, null);
                         TaxiTwinApplication.getGcmHandler().sendNewOffer();
 
                         dismiss();

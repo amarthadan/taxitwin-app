@@ -56,4 +56,8 @@
     <string name="no">No</string>
     <string name="yes">Yes</string>
     <string name="my_taxitwin">My TaxiTwin</string>
+    <string name="taxitwin_no_longer_notification_title">TaxiTwin</string>
+    <string name="taxitwin_no_longer_notification_content">TaxiTwin you were part of no longer exists.</string>
+    <string name="taxitwin_no_longer_alert_title">TaxiTwin</string>
+    <string name="taxitwin_no_longer_alert_content">TaxiTwin you were part of no longer exists.</string>
 </resources>

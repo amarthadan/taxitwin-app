@@ -53,6 +53,7 @@ import kimle.michal.android.taxitwin.dialog.alert.GooglePlayServicesAlertDialogF
 import kimle.michal.android.taxitwin.dialog.alert.InternetAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.LeaveTaxiTwinAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.TaxiTwinAlertDialogFragment;
+import kimle.michal.android.taxitwin.dialog.alert.TaxiTwinNoLongerAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.error.GooglePlayServicesErrorDialogFragment;
 import kimle.michal.android.taxitwin.gcm.GcmIntentService;
 
@@ -64,6 +65,7 @@ public class MyTaxiTwinActivity extends Activity implements
     private static final String LOG = "MyTaxiTwinActivity";
     public static final String CATEGORY_TAXITWIN_OWNER = "kimle.michal.android.taxitwin.CATEGORY_TAXITWIN_OWNER";
     public static final String CATEGORY_TAXITWIN_DATA_CHANGED = "kimle.michal.android.taxitwin.CATEGORY_TAXITWIN_DATA_CHANGED";
+    public static final String CATEGORY_TAXITWIN_NO_LONGER = "kimle.michal.android.taxitwin.CATEGORY_TAXITWIN_NO_LONGER";
     private boolean owner = false;
     private MenuItem responsesMenuItem;
     private BroadcastReceiver broadcastReceiver;
@@ -100,6 +102,9 @@ public class MyTaxiTwinActivity extends Activity implements
                         || intent.hasCategory(MainActivity.CATEGORY_OFFER_DATA_CHANGED)) {
                     fillData();
                 }
+                if (intent.hasCategory(CATEGORY_TAXITWIN_NO_LONGER)) {
+                    showTaxiTwinNoLongerDialog();
+                }
             }
         };
 
@@ -132,10 +137,12 @@ public class MyTaxiTwinActivity extends Activity implements
         super.onResume();
         mapReady = false;
         fillData();
-        IntentFilter intentFiler = new IntentFilter();
-        intentFiler.addAction(GcmIntentService.ACTION_TAXITWIN);
-        intentFiler.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED);
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFiler);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(GcmIntentService.ACTION_TAXITWIN);
+        intentFilter.addCategory(CATEGORY_TAXITWIN_DATA_CHANGED);
+        intentFilter.addCategory(CATEGORY_TAXITWIN_NO_LONGER);
+        intentFilter.addCategory(MainActivity.CATEGORY_OFFER_DATA_CHANGED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
         checkServices();
     }
 
@@ -241,6 +248,7 @@ public class MyTaxiTwinActivity extends Activity implements
     }
 
     private void exit() {
+        TaxiTwinApplication.getGcmHandler().leaveTaxiTwin();
         TaxiTwinApplication.getGcmHandler().unsubscribe();
         DbHelper dbHelper = new DbHelper(this);
         dbHelper.deleteTables(dbHelper.getWritableDatabase());
@@ -404,6 +412,11 @@ public class MyTaxiTwinActivity extends Activity implements
         LatLngBounds bounds = builder.build();
 
         map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, PADDING));
+    }
+
+    private void showTaxiTwinNoLongerDialog() {
+        DialogFragment alertFragment = new TaxiTwinNoLongerAlertDialogFragment();
+        alertFragment.show(getFragmentManager(), "taxitwin_no_longer_alert");
     }
 
     public static boolean isInTaxiTwin(Context context) {
