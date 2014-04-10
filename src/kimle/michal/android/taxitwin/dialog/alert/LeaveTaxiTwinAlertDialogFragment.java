@@ -25,6 +25,7 @@ public class LeaveTaxiTwinAlertDialogFragment extends DialogFragment {
 
                         Intent intent = new Intent(getActivity(), MainActivity.class);
                         getActivity().startActivity(intent);
+                        getActivity().finish();
                         dismiss();
                     }
                 })

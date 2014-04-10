@@ -267,11 +267,10 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_LEAVE_TAXITWIN);
 
         if (!isSubscribed() || !goodToGo) {
-            Log.w(LOG, "cannot decline a response - missing service");
+            Log.w(LOG, "cannot leave taxitwin - missing service");
             return;
         }
 
-        subscribed = false;
         gcmConnector.send(data);
     }
 }

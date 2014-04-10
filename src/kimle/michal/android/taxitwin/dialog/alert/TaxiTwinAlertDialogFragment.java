@@ -23,6 +23,9 @@ public class TaxiTwinAlertDialogFragment extends DialogFragment {
                     public void onClick(DialogInterface dialog, int id) {
                         Intent intent = new Intent(getActivity(), MyTaxiTwinActivity.class);
                         getActivity().startActivity(intent);
+
+                        getActivity().finish();
+                        dismiss();
                     }
                 })
                 .setNegativeButton(R.string.leave, new DialogInterface.OnClickListener() {

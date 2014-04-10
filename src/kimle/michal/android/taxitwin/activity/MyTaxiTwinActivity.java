@@ -162,7 +162,7 @@ public class MyTaxiTwinActivity extends Activity implements
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.taxitwin, menu);
-        responsesMenuItem = menu.findItem(R.id.action_leave_taxitwin);
+        responsesMenuItem = menu.findItem(R.id.action_responses);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -276,39 +276,41 @@ public class MyTaxiTwinActivity extends Activity implements
     private void requestLocationChanges() {
         locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
-                String addressString = null;
-                if (Geocoder.isPresent()) {
-                    Log.d(LOG, "geocoder present");
-                    try {
-                        Address address = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1).get(0);
-                        addressString = address.getAddressLine(0);
-                        for (int i = 1; i <= address.getMaxAddressLineIndex(); i++) {
-                            addressString = addressString + ", " + address.getAddressLine(i);
+                if (owner) {
+                    String addressString = null;
+                    if (Geocoder.isPresent()) {
+                        Log.d(LOG, "geocoder present");
+                        try {
+                            Address address = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1).get(0);
+                            addressString = address.getAddressLine(0);
+                            for (int i = 1; i <= address.getMaxAddressLineIndex(); i++) {
+                                addressString = addressString + ", " + address.getAddressLine(i);
+                            }
+                        } catch (IOException ex) {
+                            Log.e(LOG, ex.getMessage());
                         }
-                    } catch (IOException ex) {
-                        Log.e(LOG, ex.getMessage());
                     }
-                }
 
-                ContentValues values = new ContentValues();
-                values.put(DbContract.DbEntry.POINT_LATITUDE_COLUMN, location.getLatitude());
-                values.put(DbContract.DbEntry.POINT_LONGITUDE_COLUMN, location.getLongitude());
-                values.put(DbContract.DbEntry.POINT_TEXTUAL_COLUMN, addressString);
-                long startId = ContentUris.parseId(getContentResolver().insert(TaxiTwinContentProvider.POINTS_URI, values));
+                    ContentValues values = new ContentValues();
+                    values.put(DbContract.DbEntry.POINT_LATITUDE_COLUMN, location.getLatitude());
+                    values.put(DbContract.DbEntry.POINT_LONGITUDE_COLUMN, location.getLongitude());
+                    values.put(DbContract.DbEntry.POINT_TEXTUAL_COLUMN, addressString);
+                    long startId = ContentUris.parseId(getContentResolver().insert(TaxiTwinContentProvider.POINTS_URI, values));
 
-                values = new ContentValues();
-                values.put(DbContract.DbEntry.TAXITWIN_START_POINT_ID_COLUMN, startId);
+                    values = new ContentValues();
+                    values.put(DbContract.DbEntry.TAXITWIN_START_POINT_ID_COLUMN, startId);
 
-                String[] projection = {DbContract.DbEntry.TAXITWIN_ID_COLUMN};
-                long taxitwinId;
-                Cursor cursor = getContentResolver().query(TaxiTwinContentProvider.RIDES_URI, projection, null, null, null);
-                if (cursor != null && cursor.getCount() != 0) {
-                    cursor.moveToFirst();
-                    taxitwinId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
-                    Uri uri = Uri.parse(TaxiTwinContentProvider.TAXITWINS_URI + "/" + taxitwinId);
-                    getContentResolver().update(uri, values, null, null);
+                    String[] projection = {DbContract.DbEntry.TAXITWIN_ID_COLUMN};
+                    long taxitwinId;
+                    Cursor cursor = getContentResolver().query(TaxiTwinContentProvider.RIDES_URI, projection, null, null, null);
+                    if (cursor != null && cursor.getCount() != 0) {
+                        cursor.moveToFirst();
+                        taxitwinId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
+                        Uri uri = Uri.parse(TaxiTwinContentProvider.TAXITWINS_URI + "/" + taxitwinId);
+                        getContentResolver().update(uri, values, null, null);
 
-                    cursor.close();
+                        cursor.close();
+                    }
                 }
 
                 fillData();
@@ -380,25 +382,29 @@ public class MyTaxiTwinActivity extends Activity implements
 
         markers = new ArrayList<Marker>();
 
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(start);
         if (owner) {
+            MarkerOptions markerOptions = new MarkerOptions();
+            markerOptions.position(start);
             markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.you_pin));
             markerOptions.anchor(0.14f, 0.67f);
+            markers.add(map.addMarker(markerOptions));
         } else {
+            MarkerOptions markerOptions = new MarkerOptions();
+            markerOptions.position(start);
             markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.pin));
             markerOptions.anchor(0.34f, 0.92f);
+            markers.add(map.addMarker(markerOptions));
 
             Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             LatLng current = new LatLng(location.getLatitude(), location.getLongitude());
-            MarkerOptions otherMarkerOptions = new MarkerOptions();
-            otherMarkerOptions.position(current);
-            otherMarkerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.you_pin));
-            otherMarkerOptions.anchor(0.14f, 0.67f);
-            markers.add(map.addMarker(otherMarkerOptions));
+            markerOptions = new MarkerOptions();
+            markerOptions.position(current);
+            markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.you_pin));
+            markerOptions.anchor(0.14f, 0.67f);
+            markers.add(map.addMarker(markerOptions));
         }
-        markers.add(map.addMarker(markerOptions));
 
+        MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(end);
         markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.flag));
         markerOptions.anchor(0.11f, 0.93f);
