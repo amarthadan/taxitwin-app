@@ -305,9 +305,10 @@ public class MainActivity extends Activity implements
                     alertFragment.setDialog(alertDialog);
                     alertFragment.show(getFragmentManager(), "google_play_services_alert");
                 }
+            } else {
+                DialogFragment errorFragment = new GooglePlayServicesErrorDialogFragment();
+                errorFragment.show(getFragmentManager(), "google_play_services_error");
             }
-            DialogFragment errorFragment = new GooglePlayServicesErrorDialogFragment();
-            errorFragment.show(getFragmentManager(), "google_play_services_error");
             return false;
         }
     }

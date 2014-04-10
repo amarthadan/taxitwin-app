@@ -50,18 +50,20 @@ public class TaxiTwinMapFragment extends MapFragment implements OnMarkerClickLis
         View view = super.onCreateView(inflater, container, savedInstanceState);
         Log.d(LOG, "in onCreateView");
         Log.d(LOG, "mapViewListener: " + mapViewListener);
-        getMap().setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
-            @Override
-            public void onMapLoaded() {
-                mapReady = true;
-                if (updateMap) {
-                    updateCamera();
+        if (getMap() != null) {
+            getMap().setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+                @Override
+                public void onMapLoaded() {
+                    mapReady = true;
+                    if (updateMap) {
+                        updateCamera();
+                    }
                 }
+            });
+            getMap().setOnMarkerClickListener(this);
+            if (mapViewListener != null) {
+                mapViewListener.onMapCreated();
             }
-        });
-        getMap().setOnMarkerClickListener(this);
-        if (mapViewListener != null) {
-            mapViewListener.onMapCreated();
         }
         return view;
     }
