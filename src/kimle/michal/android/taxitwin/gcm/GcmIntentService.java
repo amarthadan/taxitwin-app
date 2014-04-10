@@ -29,6 +29,7 @@ import kimle.michal.android.taxitwin.activity.ResponsesActivity;
 import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
+import kimle.michal.android.taxitwin.enumerate.UserState;
 
 public class GcmIntentService extends IntentService {
 
@@ -296,6 +297,7 @@ public class GcmIntentService extends IntentService {
             offerId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
 
             cursor.close();
+            TaxiTwinApplication.setUserState(UserState.PARTICIPANT);
         } else {
             ContentValues values = new ContentValues();
             //storing start point
@@ -325,6 +327,7 @@ public class GcmIntentService extends IntentService {
             values.put(DbContract.DbEntry.OFFER_PASSENGERS_COLUMN, extras.getString(GcmHandler.GCM_DATA_PASSENGERS));
             values.put(DbContract.DbEntry.OFFER_PASSENGERS_TOTAL_COLUMN, extras.getString(GcmHandler.GCM_DATA_PASSENGERS_TOTAL));
             offerId = ContentUris.parseId(getContentResolver().insert(TaxiTwinContentProvider.OFFERS_URI, values));
+            TaxiTwinApplication.setUserState(UserState.OWNER);
         }
 
         ContentValues values = new ContentValues();

@@ -7,6 +7,8 @@ import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import static android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK;
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.location.Location;
@@ -227,6 +229,7 @@ public class ResponseDetailActivity extends Activity {
 
         Intent intent = new Intent(this, MyTaxiTwinActivity.class);
         intent.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_OWNER);
+        intent.addFlags(FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
     }
 

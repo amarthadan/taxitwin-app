@@ -33,18 +33,17 @@
 
     <application android:label="@string/app_name" android:icon="@drawable/ic_launcher"
                  android:name=".application.TaxiTwinApplication" android:allowBackup="false">
-        <activity android:name=".activity.MainActivity"
+        <activity android:name=".activity.LauncherActivity"
                   android:label="@string/app_name"
-                  android:launchMode="singleTop">
+                  android:theme="@android:style/Theme.NoDisplay">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!--            <intent-filter>
-                <action android:name="kimle.michal.android.taxitwin.ACTION_TAXITWIN" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="kimle.michal.android.taxitwin.CATEGORY_OFFER_DATA_CHANGED" />
-            </intent-filter>-->
+        </activity>
+        <activity android:name=".activity.MainActivity"
+                  android:label="@string/app_name"
+                  android:launchMode="singleTop">
         </activity>
         <activity android:name=".activity.OfferDetailActivity"
                   android:label="@string/offer_detail"

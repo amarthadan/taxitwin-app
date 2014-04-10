@@ -24,7 +24,7 @@ public class GcmConnector {
 
     public GcmConnector(Context context) {
         this.context = context;
-        messageId = new AtomicInteger(new Random(System.currentTimeMillis()).nextInt());
+        messageId = new AtomicInteger(new Random(System.currentTimeMillis()).nextInt(Integer.MAX_VALUE));
     }
 
     public void connect() {

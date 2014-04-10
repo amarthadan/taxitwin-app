@@ -66,6 +66,7 @@ public class MyTaxiTwinActivity extends Activity implements
     public static final String CATEGORY_TAXITWIN_OWNER = "kimle.michal.android.taxitwin.CATEGORY_TAXITWIN_OWNER";
     public static final String CATEGORY_TAXITWIN_DATA_CHANGED = "kimle.michal.android.taxitwin.CATEGORY_TAXITWIN_DATA_CHANGED";
     public static final String CATEGORY_TAXITWIN_NO_LONGER = "kimle.michal.android.taxitwin.CATEGORY_TAXITWIN_NO_LONGER";
+    private static final String SAVED_OWNER = "saved_owner";
     private boolean owner = false;
     private MenuItem responsesMenuItem;
     private BroadcastReceiver broadcastReceiver;
@@ -89,6 +90,9 @@ public class MyTaxiTwinActivity extends Activity implements
 
         if (getIntent().hasCategory(CATEGORY_TAXITWIN_OWNER)) {
             owner = true;
+        }
+        if (icicle != null && icicle.containsKey(SAVED_OWNER)) {
+            owner = icicle.getBoolean(SAVED_OWNER);
         }
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -154,6 +158,12 @@ public class MyTaxiTwinActivity extends Activity implements
     }
 
     @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putBoolean(SAVED_OWNER, owner);
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         checkServices();
     }
@@ -170,7 +180,7 @@ public class MyTaxiTwinActivity extends Activity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_leave_taxitwin:
-                DialogFragment alertFragment = new LeaveTaxiTwinAlertDialogFragment();
+                DialogFragment alertFragment = LeaveTaxiTwinAlertDialogFragment.newInstance(owner);
                 alertFragment.show(getFragmentManager(), "leave_taxitwin_alert");
                 return true;
             case R.id.action_responses:

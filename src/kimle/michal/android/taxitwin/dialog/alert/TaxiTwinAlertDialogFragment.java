@@ -5,11 +5,14 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.content.Intent;
+import static android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK;
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import android.os.Bundle;
 import kimle.michal.android.taxitwin.R;
 import kimle.michal.android.taxitwin.activity.MyTaxiTwinActivity;
 import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
+import kimle.michal.android.taxitwin.enumerate.UserState;
 
 public class TaxiTwinAlertDialogFragment extends DialogFragment {
 
@@ -22,6 +25,7 @@ public class TaxiTwinAlertDialogFragment extends DialogFragment {
                 .setPositiveButton(R.string.enter, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         Intent intent = new Intent(getActivity(), MyTaxiTwinActivity.class);
+                        intent.addFlags(FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK);
                         getActivity().startActivity(intent);
 
                         getActivity().finish();
@@ -32,7 +36,7 @@ public class TaxiTwinAlertDialogFragment extends DialogFragment {
                     public void onClick(DialogInterface dialog, int id) {
                         TaxiTwinApplication.getGcmHandler().leaveTaxiTwin();
                         getActivity().getContentResolver().delete(TaxiTwinContentProvider.RIDES_URI, null, null);
-                        TaxiTwinApplication.getGcmHandler().sendNewOffer();
+                        TaxiTwinApplication.setUserState(UserState.NO_RIDE);
 
                         dismiss();
                     }
