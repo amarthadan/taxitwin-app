@@ -18,7 +18,6 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
@@ -47,16 +46,12 @@ import kimle.michal.android.taxitwin.gcm.GcmIntentService;
 import kimle.michal.android.taxitwin.popup.SettingsPopup;
 
 public class MainActivity extends Activity implements
-        GooglePlayServicesErrorDialogFragment.GooglePlayServicesErrorDialogListener,
-        GPSAlertDialogFragment.GPSAlertDialogListener,
-        InternetAlertDialogFragment.InternetAlertDialogListener,
         TaxiTwinMapFragment.MapViewListener {
 
     private static final String LOG = "MainActivity";
     private static final int MAP_VIEW_POSITION = 0;
     private static final int LIST_VIEW_POSITION = 1;
     private static final int PLAY_SERVICES_REQUEST = 9000;
-    private static final int GPS_REQUEST = 10000;
     public static final int OFFER_DETAIL = 11000;
     public static final String CATEGORY_OFFER_DATA_CHANGED = "kimle.michal.android.taxitwin.CATEGORY_OFFER_DATA_CHANGED";
     public static final String CATEGORY_OFFER_ACCEPTED = "kimle.michal.android.taxitwin.CATEGORY_OFFER_ACCEPTED";
@@ -113,7 +108,7 @@ public class MainActivity extends Activity implements
             }
         };
 
-        checkServices();
+        //checkServices();
         buildGUI(savedInstanceState);
 
         Log.d(LOG, "end of onCreate");
@@ -223,14 +218,6 @@ public class MainActivity extends Activity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(LOG, "requestCode: " + requestCode);
         switch (requestCode) {
-            case PLAY_SERVICES_REQUEST:
-                Log.d(LOG, "result of google play services request");
-                checkGooglePlayServices();
-                break;
-            case GPS_REQUEST:
-                Log.d(LOG, "result of gps request");
-                checkGPS();
-                break;
             case OFFER_DETAIL:
                 Log.d(LOG, "offer accepted");
                 Log.d(LOG, "resultCode: " + resultCode);
@@ -238,8 +225,6 @@ public class MainActivity extends Activity implements
                     acceptOffer(data.getLongExtra(GcmHandler.GCM_DATA_TAXITWIN_ID, 0));
                 }
         }
-
-        checkServices();
     }
 
     @Override
@@ -313,10 +298,6 @@ public class MainActivity extends Activity implements
         }
     }
 
-    public void onDialogNeutralClick(DialogFragment dialog) {
-        exit();
-    }
-
     private void exit() {
         TaxiTwinApplication.getGcmHandler().unsubscribe();
         DbHelper dbHelper = new DbHelper(this);
@@ -336,17 +317,6 @@ public class MainActivity extends Activity implements
             DialogFragment alertFragment = new GPSAlertDialogFragment();
             alertFragment.show(getFragmentManager(), "gps_alert");
             return false;
-        }
-    }
-
-    public void onDialogPositiveClick(DialogFragment dialog) {
-        if (dialog instanceof GPSAlertDialogFragment) {
-            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            startActivityForResult(intent, GPS_REQUEST);
-        }
-        if (dialog instanceof InternetAlertDialogFragment) {
-            Intent intent = new Intent(Settings.ACTION_WIRELESS_SETTINGS);
-            startActivity(intent);
         }
     }
 

@@ -22,7 +22,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
@@ -47,7 +46,6 @@ import kimle.michal.android.taxitwin.R;
 import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
-import kimle.michal.android.taxitwin.db.DbHelper;
 import kimle.michal.android.taxitwin.dialog.alert.GPSAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.GooglePlayServicesAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.InternetAlertDialogFragment;
@@ -57,10 +55,7 @@ import kimle.michal.android.taxitwin.dialog.alert.TaxiTwinNoLongerAlertDialogFra
 import kimle.michal.android.taxitwin.dialog.error.GooglePlayServicesErrorDialogFragment;
 import kimle.michal.android.taxitwin.gcm.GcmIntentService;
 
-public class MyTaxiTwinActivity extends Activity implements
-        GooglePlayServicesErrorDialogFragment.GooglePlayServicesErrorDialogListener,
-        GPSAlertDialogFragment.GPSAlertDialogListener,
-        InternetAlertDialogFragment.InternetAlertDialogListener {
+public class MyTaxiTwinActivity extends Activity {
 
     private static final String LOG = "MyTaxiTwinActivity";
     public static final String CATEGORY_TAXITWIN_OWNER = "kimle.michal.android.taxitwin.CATEGORY_TAXITWIN_OWNER";
@@ -80,7 +75,6 @@ public class MyTaxiTwinActivity extends Activity implements
     private LocationListener locationListener;
     private boolean gpsEnabled = false;
     private static final int PLAY_SERVICES_REQUEST = 9000;
-    private static final int GPS_REQUEST = 10000;
     private Geocoder geocoder;
 
     @Override
@@ -131,7 +125,6 @@ public class MyTaxiTwinActivity extends Activity implements
             }
         });
 
-        checkServices();
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(GcmIntentService.NOTIFICATION_TAXITWIN);
     }
@@ -164,11 +157,6 @@ public class MyTaxiTwinActivity extends Activity implements
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        checkServices();
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.taxitwin, menu);
@@ -188,7 +176,7 @@ public class MyTaxiTwinActivity extends Activity implements
                 startActivity(i);
                 return true;
             case R.id.action_exit:
-                exit();
+                TaxiTwinApplication.exit(this);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -236,33 +224,6 @@ public class MyTaxiTwinActivity extends Activity implements
             alertFragment.show(getFragmentManager(), "gps_alert");
             return false;
         }
-    }
-
-    public void onDialogPositiveClick(DialogFragment dialog) {
-        if (dialog instanceof GPSAlertDialogFragment) {
-            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            startActivityForResult(intent, GPS_REQUEST);
-        }
-        if (dialog instanceof InternetAlertDialogFragment) {
-            Intent intent = new Intent(Settings.ACTION_WIRELESS_SETTINGS);
-            startActivity(intent);
-        }
-    }
-
-    public void onDialogNeutralClick(DialogFragment dialog) {
-        exit();
-    }
-
-    public void onDialogNegativeClick(DialogFragment dialog) {
-        exit();
-    }
-
-    private void exit() {
-        TaxiTwinApplication.getGcmHandler().leaveTaxiTwin();
-        TaxiTwinApplication.getGcmHandler().unsubscribe();
-        DbHelper dbHelper = new DbHelper(this);
-        dbHelper.deleteTables(dbHelper.getWritableDatabase());
-        android.os.Process.killProcess(android.os.Process.myPid());
     }
 
     private boolean checkInternet() {

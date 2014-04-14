@@ -5,9 +5,11 @@ import android.accounts.AccountManager;
 import android.content.Context;
 import static android.content.Context.ACCOUNT_SERVICE;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.ContactsContract;
 import android.util.Log;
 import kimle.michal.android.taxitwin.R;
 import kimle.michal.android.taxitwin.entity.Place;
@@ -184,30 +186,35 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
 
         Log.d(LOG, "sending changes: " + data);
     }
-//
-//    private String getDeviceId() {
-//        return Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
-//    }
 
-    public String getUserName() {
-//        Cursor c = context.getContentResolver().query(ContactsContract.Profile.CONTENT_URI, null, null, null, null);
-//        c.moveToFirst();
-//        String name = c.getString(c.getColumnIndex("display_name"));
-//        c.close();
-//
-//        return name;
-        AccountManager manager = (AccountManager) context.getSystemService(ACCOUNT_SERVICE);
-        Account[] list = manager.getAccounts();
+    private String getUserName() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            Cursor cursor = context.getContentResolver().query(ContactsContract.Profile.CONTENT_URI, null, null, null, null);
+            if (cursor != null && cursor.getCount() != 0) {
+                cursor.moveToFirst();
 
-        for (Account account : list) {
-            if (account.type.equalsIgnoreCase("com.google")) {
-                return account.name;
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.Profile.DISPLAY_NAME));
+                if (name != null && !name.isEmpty()) {
+                    return name;
+                }
+            }
+        } else {
+            AccountManager manager = (AccountManager) context.getSystemService(ACCOUNT_SERVICE);
+            Account[] list = manager.getAccounts();
+            String accountName = "";
+            for (Account account : list) {
+                if (account.type.equalsIgnoreCase("com.google")) {
+                    accountName = account.name;
+                }
+            }
+
+            if (accountName.contains("@")) {
+                String[] parts = accountName.split("@");
+                return parts[0];
             }
         }
 
-        Log.w(LOG, "no name was found");
-        return "";
-        //FIXME giving email not name
+        return "unknown name";
     }
 
     public void unsubscribe() {

@@ -1,23 +1,18 @@
 package kimle.michal.android.taxitwin.dialog.alert;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import kimle.michal.android.taxitwin.R;
+import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
 
 public class GPSAlertDialogFragment extends DialogFragment {
 
-    public interface GPSAlertDialogListener {
-
-        public void onDialogPositiveClick(DialogFragment dialog);
-
-        public void onDialogNegativeClick(DialogFragment dialog);
-    }
-
-    private GPSAlertDialogListener listener;
+    public static final int GPS_REQUEST = 10000;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -26,30 +21,21 @@ public class GPSAlertDialogFragment extends DialogFragment {
                 .setTitle(R.string.gps_alert_title)
                 .setPositiveButton(R.string.location_settings, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        listener.onDialogPositiveClick(GPSAlertDialogFragment.this);
+                        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivityForResult(intent, GPS_REQUEST);
+                        dismiss();
                     }
                 })
                 .setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        listener.onDialogNegativeClick(GPSAlertDialogFragment.this);
+                        TaxiTwinApplication.exit(getActivity());
                     }
                 });
         return builder.create();
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            listener = (GPSAlertDialogListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement GPSAlertDialogListener");
-        }
-    }
-
-    @Override
     public void onCancel(DialogInterface dialog) {
-        listener.onDialogNegativeClick(GPSAlertDialogFragment.this);
+        TaxiTwinApplication.exit(getActivity());
     }
 }

@@ -1,6 +1,8 @@
 package kimle.michal.android.taxitwin.application;
 
 import android.app.Application;
+import android.content.Context;
+import kimle.michal.android.taxitwin.db.DbHelper;
 import kimle.michal.android.taxitwin.enumerate.UserState;
 import static kimle.michal.android.taxitwin.enumerate.UserState.NO_RIDE;
 import kimle.michal.android.taxitwin.gcm.GcmHandler;
@@ -35,5 +37,15 @@ public class TaxiTwinApplication extends Application {
 
     public static void setUserState(UserState userState) {
         TaxiTwinApplication.userState = userState;
+    }
+
+    public static void exit(Context context) {
+        if (userState != UserState.NO_RIDE) {
+            TaxiTwinApplication.getGcmHandler().leaveTaxiTwin();
+        }
+        TaxiTwinApplication.getGcmHandler().unsubscribe();
+        DbHelper dbHelper = new DbHelper(context);
+        dbHelper.deleteTables(dbHelper.getWritableDatabase());
+        android.os.Process.killProcess(android.os.Process.myPid());
     }
 }
