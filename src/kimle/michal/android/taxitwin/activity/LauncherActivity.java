@@ -6,7 +6,6 @@ import static android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK;
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import android.os.Bundle;
 import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
-import static kimle.michal.android.taxitwin.enumerate.UserState.NO_RIDE;
 import static kimle.michal.android.taxitwin.enumerate.UserState.OWNER;
 import static kimle.michal.android.taxitwin.enumerate.UserState.PARTICIPANT;
 
@@ -17,7 +16,8 @@ public class LauncherActivity extends Activity {
         super.onCreate(icicle);
         Intent intent;
         switch (TaxiTwinApplication.getUserState()) {
-            case NO_RIDE:
+            case NOT_SUBSCRIBED:
+            case SUBSCRIBED:
                 intent = new Intent(this, MainActivity.class);
                 intent.addFlags(FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK);
                 break;

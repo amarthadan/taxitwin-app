@@ -36,6 +36,7 @@ import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
 import kimle.michal.android.taxitwin.dialog.alert.ServicesAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.error.ResponseErrorDialogFragment;
+import kimle.michal.android.taxitwin.gcm.GcmHandler;
 import kimle.michal.android.taxitwin.gcm.GcmIntentService;
 import kimle.michal.android.taxitwin.services.ServicesManagement;
 
@@ -237,7 +238,8 @@ public class ResponseDetailActivity extends Activity {
     }
 
     private void acceptResponse(long taxitwinId) {
-        TaxiTwinApplication.getGcmHandler().acceptResponse(taxitwinId);
+        GcmHandler gcmHandler = new GcmHandler(this);
+        gcmHandler.acceptResponse(taxitwinId);
 
         Intent intent = new Intent(this, MyTaxiTwinActivity.class);
         intent.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_OWNER);
@@ -246,6 +248,7 @@ public class ResponseDetailActivity extends Activity {
     }
 
     private void declineResponse(long taxitwinId) {
-        TaxiTwinApplication.getGcmHandler().declineResponse(taxitwinId);
+        GcmHandler gcmHandler = new GcmHandler(this);
+        gcmHandler.declineResponse(taxitwinId);
     }
 }

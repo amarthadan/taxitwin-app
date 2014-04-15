@@ -16,6 +16,7 @@ import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
 import kimle.michal.android.taxitwin.enumerate.UserState;
+import kimle.michal.android.taxitwin.gcm.GcmHandler;
 
 public class LeaveTaxiTwinAlertDialogFragment extends DialogFragment {
 
@@ -37,7 +38,8 @@ public class LeaveTaxiTwinAlertDialogFragment extends DialogFragment {
                 .setTitle(R.string.leave_taxitwin_alert_title)
                 .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        TaxiTwinApplication.getGcmHandler().leaveTaxiTwin();
+                        GcmHandler gcmHandler = new GcmHandler(getActivity());
+                        gcmHandler.leaveTaxiTwin();
                         if (owner) {
                             String[] projection = {DbContract.DbEntry.TAXITWIN_ID_COLUMN};
                             Cursor cursor = getActivity().getContentResolver().query(TaxiTwinContentProvider.RIDES_URI, projection, null, null, null);
@@ -57,7 +59,7 @@ public class LeaveTaxiTwinAlertDialogFragment extends DialogFragment {
                         intent.addFlags(FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK);
                         getActivity().startActivity(intent);
                         getActivity().finish();
-                        TaxiTwinApplication.setUserState(UserState.NO_RIDE);
+                        TaxiTwinApplication.setUserState(UserState.SUBSCRIBED);
                         dismiss();
                     }
                 })

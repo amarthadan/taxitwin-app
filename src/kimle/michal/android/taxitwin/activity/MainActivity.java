@@ -10,11 +10,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
@@ -38,7 +40,8 @@ import kimle.michal.android.taxitwin.popup.SettingsPopup;
 import kimle.michal.android.taxitwin.services.ServicesManagement;
 
 public class MainActivity extends Activity implements
-        TaxiTwinMapFragment.MapViewListener {
+        TaxiTwinMapFragment.MapViewListener,
+        SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String LOG = "MainActivity";
     private static final int MAP_VIEW_POSITION = 0;
@@ -124,6 +127,7 @@ public class MainActivity extends Activity implements
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
         ServicesManagement.initialCheck(this);
         onMapCreated();
+        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
     }
 
     @Override
@@ -256,6 +260,11 @@ public class MainActivity extends Activity implements
         }
     }
 
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        GcmHandler gcmHandler = new GcmHandler(this);
+        gcmHandler.onSharedPreferenceChanged(sharedPreferences, key);
+    }
+
     private View getActionBarView() {
         Window window = getWindow();
         View v = window.getDecorView();
@@ -267,9 +276,7 @@ public class MainActivity extends Activity implements
         locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the gps location provider.
-                mapViewFragment.updateCurrentLocation(location);
-                TaxiTwinApplication.getGcmHandler().locationChanged(location);
-                removeWaitForGPSSignal();
+                updateLocation(location);
                 Log.d(LOG, "onLocationChanged");
             }
 
@@ -288,6 +295,13 @@ public class MainActivity extends Activity implements
         };
         //every 10 seconds and at least 3 meters
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 3, locationListener);
+    }
+
+    private void updateLocation(Location location) {
+        mapViewFragment.updateCurrentLocation(location);
+        GcmHandler gcmHandler = new GcmHandler(this);
+        gcmHandler.locationChanged(location);
+        removeWaitForGPSSignal();
     }
 
     private void addWaitForGPSSignal() {
@@ -315,7 +329,8 @@ public class MainActivity extends Activity implements
     }
 
     private void acceptOffer(long taxitwinId) {
-        TaxiTwinApplication.getGcmHandler().acceptOffer(taxitwinId);
+        GcmHandler gcmHandler = new GcmHandler(this);
+        gcmHandler.acceptOffer(taxitwinId);
     }
 
     private void showTaxiTwinDialog() {

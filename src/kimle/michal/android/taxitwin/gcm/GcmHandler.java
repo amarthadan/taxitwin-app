@@ -4,15 +4,19 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
 import static android.content.Context.ACCOUNT_SERVICE;
+import static android.content.Context.LOCATION_SERVICE;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.util.Log;
 import kimle.michal.android.taxitwin.R;
-import kimle.michal.android.taxitwin.entity.Place;
+import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
+import kimle.michal.android.taxitwin.enumerate.UserState;
+import kimle.michal.android.taxitwin.services.ServicesManagement;
 
 public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -43,125 +47,107 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     public static final String GCM_DATA_TYPE_LEAVE_TAXITWIN = "leave_taxitwin";
     public static final String GCM_DATA_TYPE_NO_LONGER = "no_longer";
     private static final String LOG = "GcmHandler";
-    private boolean subscribed = false;
-    private Place current;
-    private Place destination;
-    private int radius;
-    private int passengers;
     private final Context context;
-    private boolean goodToGo = false;
     private final GcmConnector gcmConnector;
 
     public GcmHandler(Context context) {
         this.context = context;
-
-        PreferenceManager.getDefaultSharedPreferences(context).registerOnSharedPreferenceChangeListener(this);
-        loadPreferences();
         gcmConnector = new GcmConnector(context);
-    }
-
-    public void setGoodToGo(boolean status) {
-        goodToGo = status;
-    }
-
-    private void loadPreferences() {
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
-        destination = new Place();
-        destination.setAddress(pref.getString(context.getResources().getString(R.string.pref_address), null));
-        destination.setLatitude(Double.valueOf(pref.getFloat(context.getResources().getString(R.string.pref_address_lat), 0)));
-        destination.setLongitude(Double.valueOf(pref.getFloat(context.getResources().getString(R.string.pref_address_long), 0)));
-        current = new Place();
-        radius = pref.getInt(context.getResources().getString(R.string.pref_radius), 0);
-        passengers = pref.getInt(context.getResources().getString(R.string.pref_passengers), 0);
     }
 
     public void locationChanged(Location location) {
         Log.d(LOG, "in locationChanged");
         if (location != null) {
-            if (current == null) {
-                current = new Place();
-            }
-            current.setLatitude(location.getLatitude());
-            current.setLongitude(location.getLongitude());
+            Bundle data = new Bundle();
+            data.putString(GCM_DATA_START_LATITUDE, String.valueOf(location.getLatitude()));
+            data.putString(GCM_DATA_START_LONGITUDE, String.valueOf(location.getLongitude()));
+            sendChangedOffer(data);
         }
-
-        Bundle data = new Bundle();
-        data.putString(GCM_DATA_START_LATITUDE, current.getLatitude().toString());
-        data.putString(GCM_DATA_START_LONGITUDE, current.getLongitude().toString());
-        sendChangedOffer(data);
     }
 
     private boolean hasAllData() {
-        return (current.isFilled() && destination.isFilled() && radius > 0 && passengers > 0);
+        LocationManager locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
+        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (location == null || location.getLatitude() == 0 || location.getLongitude() == 0) {
+            return false;
+        }
+
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+        if (pref.getFloat(context.getResources().getString(R.string.pref_address_lat), 0) == 0
+                || pref.getFloat(context.getResources().getString(R.string.pref_address_long), 0) == 0) {
+            return false;
+        }
+        if (pref.getInt(context.getResources().getString(R.string.pref_radius), 0) == 0
+                || pref.getInt(context.getResources().getString(R.string.pref_passengers), 0) == 0) {
+            return false;
+        }
+
+        return true;
     }
 
     public void sendNewOffer() {
         Log.d(LOG, "in sendNewOffer");
-        if (!hasAllData() || !goodToGo) {
+        if (!hasAllData() || !ServicesManagement.checkServices(context)) {
             Log.w(LOG, "cannot send new offer - missing data or service");
             return;
         }
 
+        LocationManager locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
+        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+
         Bundle data = new Bundle();
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_SUBSCRIBE);
-        data.putString(GCM_DATA_START_LATITUDE, current.getLatitude().toString());
-        data.putString(GCM_DATA_START_LONGITUDE, current.getLongitude().toString());
-        data.putString(GCM_DATA_END_LATITUDE, destination.getLatitude().toString());
-        data.putString(GCM_DATA_END_LONGITUDE, destination.getLongitude().toString());
-        data.putString(GCM_DATA_PASSENGERS, String.valueOf(passengers));
-        data.putString(GCM_DATA_RADIUS, String.valueOf(radius));
+        data.putString(GCM_DATA_START_LATITUDE, String.valueOf(location.getLatitude()));
+        data.putString(GCM_DATA_START_LONGITUDE, String.valueOf(location.getLongitude()));
+        data.putString(GCM_DATA_END_LATITUDE, String.valueOf(pref.getFloat(context.getResources().getString(R.string.pref_address_lat), 0)));
+        data.putString(GCM_DATA_END_LONGITUDE, String.valueOf(pref.getFloat(context.getResources().getString(R.string.pref_address_long), 0)));
+        data.putString(GCM_DATA_PASSENGERS, String.valueOf(pref.getInt(context.getResources().getString(R.string.pref_passengers), 0)));
+        data.putString(GCM_DATA_RADIUS, String.valueOf(pref.getInt(context.getResources().getString(R.string.pref_radius), 0)));
         data.putString(GCM_DATA_NAME, getUserName());
 
         gcmConnector.send(data);
-        subscribed = true;
+        TaxiTwinApplication.setUserState(UserState.SUBSCRIBED);
 
         Log.d(LOG, "sending subscribe: " + data);
     }
 
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+    public void onSharedPreferenceChanged(SharedPreferences pref, String key) {
         Log.d(LOG, "in onSharedPreferenceChanged");
         if (key.equals(context.getResources().getString(R.string.pref_address))) {
-            if (destination == null) {
-                destination = new Place();
-            }
-
-            destination.setLatitude(Double.valueOf(sharedPreferences.getFloat(context.getResources().getString(R.string.pref_address_lat), destination.getLatitude().floatValue())));
-            destination.setLongitude(Double.valueOf(sharedPreferences.getFloat(context.getResources().getString(R.string.pref_address_long), destination.getLongitude().floatValue())));
 
             Bundle data = new Bundle();
-            data.putString(GCM_DATA_END_LATITUDE, destination.getLatitude().toString());
-            data.putString(GCM_DATA_END_LONGITUDE, destination.getLongitude().toString());
+            data.putString(GCM_DATA_END_LATITUDE, String.valueOf(pref.getFloat(context.getResources().getString(R.string.pref_address_lat), 0)));
+            data.putString(GCM_DATA_END_LONGITUDE, String.valueOf(pref.getFloat(context.getResources().getString(R.string.pref_address_long), 0)));
 
             sendChangedOffer(data);
             return;
         }
 
         if (key.equals(context.getResources().getString(R.string.pref_passengers))) {
-            passengers = sharedPreferences.getInt(key, passengers);
 
             Bundle data = new Bundle();
-            data.putString(GCM_DATA_PASSENGERS, String.valueOf(passengers));
+            data.putString(GCM_DATA_PASSENGERS, String.valueOf(pref.getInt(context.getResources().getString(R.string.pref_passengers), 0)));
 
             sendChangedOffer(data);
             return;
         }
 
         if (key.equals(context.getResources().getString(R.string.pref_radius))) {
-            radius = sharedPreferences.getInt(key, radius);
 
             Bundle data = new Bundle();
-            data.putString(GCM_DATA_RADIUS, String.valueOf(radius));
+            data.putString(GCM_DATA_RADIUS, String.valueOf(pref.getInt(context.getResources().getString(R.string.pref_radius), 0)));
 
             sendChangedOffer(data);
         }
     }
 
     private void sendChangedOffer(Bundle data) {
-        if (!subscribed) {
+        if (TaxiTwinApplication.getUserState() == UserState.NOT_SUBSCRIBED) {
             sendNewOffer();
             return;
         }
-        if (!goodToGo) {
+        if (!ServicesManagement.checkServices(context)) {
             Log.w(LOG, "cannot send new changes to offer - missing service");
             return;
         }
@@ -206,13 +192,13 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         Bundle data = new Bundle();
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_UNSUBSCRIBE);
 
-        if (!subscribed || !goodToGo) {
+        if (TaxiTwinApplication.getUserState() == UserState.NOT_SUBSCRIBED || !ServicesManagement.checkServices(context)) {
             Log.w(LOG, "cannot unsubscribe - missing service");
             return;
         }
 
         gcmConnector.send(data);
-        subscribed = false;
+        TaxiTwinApplication.setUserState(UserState.NOT_SUBSCRIBED);
     }
 
     public void acceptOffer(long taxitwinId) {
@@ -220,7 +206,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_ACCEPT_OFFER);
         data.putString(GCM_DATA_TAXITWIN_ID, String.valueOf(taxitwinId));
 
-        if (!subscribed || !goodToGo) {
+        if (TaxiTwinApplication.getUserState() == UserState.NOT_SUBSCRIBED || !ServicesManagement.checkServices(context)) {
             Log.w(LOG, "cannot accept an offer - missing service");
             return;
         }
@@ -233,7 +219,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_ACCEPT_RESPONSE);
         data.putString(GCM_DATA_TAXITWIN_ID, String.valueOf(taxitwinId));
 
-        if (!subscribed || !goodToGo) {
+        if (TaxiTwinApplication.getUserState() == UserState.NOT_SUBSCRIBED || !ServicesManagement.checkServices(context)) {
             Log.w(LOG, "cannot accept a response - missing service");
             return;
         }
@@ -246,7 +232,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_DECLINE_RESPONSE);
         data.putString(GCM_DATA_TAXITWIN_ID, String.valueOf(taxitwinId));
 
-        if (!subscribed || !goodToGo) {
+        if (TaxiTwinApplication.getUserState() == UserState.NOT_SUBSCRIBED || !ServicesManagement.checkServices(context)) {
             Log.w(LOG, "cannot decline a response - missing service");
             return;
         }
@@ -258,7 +244,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         Bundle data = new Bundle();
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_LEAVE_TAXITWIN);
 
-        if (!subscribed || !goodToGo) {
+        if (TaxiTwinApplication.getUserState() == UserState.NOT_SUBSCRIBED || !ServicesManagement.checkServices(context)) {
             Log.w(LOG, "cannot leave taxitwin - missing service");
             return;
         }

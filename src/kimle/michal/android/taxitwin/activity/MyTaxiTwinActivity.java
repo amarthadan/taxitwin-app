@@ -44,6 +44,7 @@ import kimle.michal.android.taxitwin.dialog.alert.LeaveTaxiTwinAlertDialogFragme
 import kimle.michal.android.taxitwin.dialog.alert.ServicesAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.TaxiTwinAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.TaxiTwinNoLongerAlertDialogFragment;
+import kimle.michal.android.taxitwin.gcm.GcmHandler;
 import kimle.michal.android.taxitwin.gcm.GcmIntentService;
 import kimle.michal.android.taxitwin.services.ServicesManagement;
 
@@ -236,7 +237,8 @@ public class MyTaxiTwinActivity extends Activity {
                 }
 
                 fillData();
-                TaxiTwinApplication.getGcmHandler().locationChanged(location);
+                GcmHandler gcmHandler = new GcmHandler(getApplicationContext());
+                gcmHandler.locationChanged(location);
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {

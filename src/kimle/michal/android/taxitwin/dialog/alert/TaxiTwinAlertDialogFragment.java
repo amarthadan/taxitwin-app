@@ -13,6 +13,7 @@ import kimle.michal.android.taxitwin.activity.MyTaxiTwinActivity;
 import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.enumerate.UserState;
+import kimle.michal.android.taxitwin.gcm.GcmHandler;
 
 public class TaxiTwinAlertDialogFragment extends DialogFragment {
 
@@ -34,9 +35,10 @@ public class TaxiTwinAlertDialogFragment extends DialogFragment {
                 })
                 .setNegativeButton(R.string.leave, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        TaxiTwinApplication.getGcmHandler().leaveTaxiTwin();
+                        GcmHandler gcmHandler = new GcmHandler(getActivity());
+                        gcmHandler.leaveTaxiTwin();
                         getActivity().getContentResolver().delete(TaxiTwinContentProvider.RIDES_URI, null, null);
-                        TaxiTwinApplication.setUserState(UserState.NO_RIDE);
+                        TaxiTwinApplication.setUserState(UserState.SUBSCRIBED);
 
                         dismiss();
                     }
