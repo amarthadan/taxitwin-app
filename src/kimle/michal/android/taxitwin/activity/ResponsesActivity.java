@@ -1,6 +1,7 @@
 package kimle.michal.android.taxitwin.activity;
 
 import android.app.ActionBar;
+import android.app.DialogFragment;
 import android.app.ListActivity;
 import android.app.LoaderManager;
 import android.app.NotificationManager;
@@ -21,7 +22,9 @@ import kimle.michal.android.taxitwin.R;
 import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
+import kimle.michal.android.taxitwin.dialog.alert.ServicesAlertDialogFragment;
 import kimle.michal.android.taxitwin.gcm.GcmIntentService;
+import kimle.michal.android.taxitwin.services.ServicesManagement;
 
 public class ResponsesActivity extends ListActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -50,6 +53,14 @@ public class ResponsesActivity extends ListActivity implements LoaderManager.Loa
                 if (intent.hasCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED)) {
                     showTaxiTwinDialog();
                 }
+                if (intent.hasCategory(ServicesManagement.CATEGORY_GPS_DISABLED)) {
+                    DialogFragment alertFragment = new ServicesAlertDialogFragment(R.string.services_gps_alert_message);
+                    alertFragment.show(getFragmentManager(), "gps_alert");
+                }
+                if (intent.hasCategory(ServicesManagement.CATEGORY_NETWORK_DISABLED)) {
+                    DialogFragment alertFragment = new ServicesAlertDialogFragment(R.string.services_network_alert_message);
+                    alertFragment.show(getFragmentManager(), "network_alert");
+                }
             }
         };
 
@@ -71,6 +82,8 @@ public class ResponsesActivity extends ListActivity implements LoaderManager.Loa
         intentFilter.addAction(GcmIntentService.ACTION_TAXITWIN);
         intentFilter.addCategory(CATEGORY_RESPONSE_DATA_CHANGED);
         intentFilter.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED);
+        intentFilter.addCategory(ServicesManagement.CATEGORY_GPS_DISABLED);
+        intentFilter.addCategory(ServicesManagement.CATEGORY_NETWORK_DISABLED);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
     }
 

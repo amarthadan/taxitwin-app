@@ -43,28 +43,21 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     public static final String GCM_DATA_TYPE_LEAVE_TAXITWIN = "leave_taxitwin";
     public static final String GCM_DATA_TYPE_NO_LONGER = "no_longer";
     private static final String LOG = "GcmHandler";
-    private boolean subscribed;
+    private boolean subscribed = false;
     private Place current;
     private Place destination;
     private int radius;
     private int passengers;
     private final Context context;
-    private boolean goodToGo;
+    private boolean goodToGo = false;
     private final GcmConnector gcmConnector;
 
-    public GcmHandler(Context context, boolean subscribed, Place current) {
+    public GcmHandler(Context context) {
         this.context = context;
-        this.subscribed = subscribed;
-        this.current = current;
 
         PreferenceManager.getDefaultSharedPreferences(context).registerOnSharedPreferenceChangeListener(this);
         loadPreferences();
-        goodToGo = false;
         gcmConnector = new GcmConnector(context);
-    }
-
-    public GcmHandler(Context context) {
-        this(context, false, null);
     }
 
     public void setGoodToGo(boolean status) {
@@ -80,14 +73,6 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         current = new Place();
         radius = pref.getInt(context.getResources().getString(R.string.pref_radius), 0);
         passengers = pref.getInt(context.getResources().getString(R.string.pref_passengers), 0);
-    }
-
-    public boolean isSubscribed() {
-        return subscribed;
-    }
-
-    public Place getCurrentLocation() {
-        return current;
     }
 
     public void locationChanged(Location location) {
@@ -172,7 +157,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     }
 
     private void sendChangedOffer(Bundle data) {
-        if (!isSubscribed()) {
+        if (!subscribed) {
             sendNewOffer();
             return;
         }
@@ -221,7 +206,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         Bundle data = new Bundle();
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_UNSUBSCRIBE);
 
-        if (!isSubscribed() || !goodToGo) {
+        if (!subscribed || !goodToGo) {
             Log.w(LOG, "cannot unsubscribe - missing service");
             return;
         }
@@ -235,7 +220,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_ACCEPT_OFFER);
         data.putString(GCM_DATA_TAXITWIN_ID, String.valueOf(taxitwinId));
 
-        if (!isSubscribed() || !goodToGo) {
+        if (!subscribed || !goodToGo) {
             Log.w(LOG, "cannot accept an offer - missing service");
             return;
         }
@@ -248,7 +233,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_ACCEPT_RESPONSE);
         data.putString(GCM_DATA_TAXITWIN_ID, String.valueOf(taxitwinId));
 
-        if (!isSubscribed() || !goodToGo) {
+        if (!subscribed || !goodToGo) {
             Log.w(LOG, "cannot accept a response - missing service");
             return;
         }
@@ -261,7 +246,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_DECLINE_RESPONSE);
         data.putString(GCM_DATA_TAXITWIN_ID, String.valueOf(taxitwinId));
 
-        if (!isSubscribed() || !goodToGo) {
+        if (!subscribed || !goodToGo) {
             Log.w(LOG, "cannot decline a response - missing service");
             return;
         }
@@ -273,7 +258,7 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         Bundle data = new Bundle();
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_LEAVE_TAXITWIN);
 
-        if (!isSubscribed() || !goodToGo) {
+        if (!subscribed || !goodToGo) {
             Log.w(LOG, "cannot leave taxitwin - missing service");
             return;
         }

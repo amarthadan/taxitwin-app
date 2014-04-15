@@ -60,4 +60,7 @@
     <string name="taxitwin_no_longer_notification_content">TaxiTwin you were part of no longer exists.</string>
     <string name="taxitwin_no_longer_alert_title">TaxiTwin</string>
     <string name="taxitwin_no_longer_alert_content">TaxiTwin you were part of no longer exists.</string>
+    <string name="services_alert_title">Service problem</string>
+    <string name="services_network_alert_message">Your network connection has stopped working. Application will not work correctly.</string>
+    <string name="services_gps_alert_message">Your GPS connection has stopped working. Application will not work correctly.</string>
 </resources>

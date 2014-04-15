@@ -3,7 +3,6 @@ package kimle.michal.android.taxitwin.activity;
 import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
 import android.app.Activity;
-import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -15,8 +14,6 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -29,21 +26,16 @@ import android.widget.ArrayAdapter;
 import android.widget.PopupWindow.OnDismissListener;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.MapsInitializer;
 import kimle.michal.android.taxitwin.R;
 import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
-import kimle.michal.android.taxitwin.db.DbHelper;
-import kimle.michal.android.taxitwin.dialog.alert.GPSAlertDialogFragment;
-import kimle.michal.android.taxitwin.dialog.alert.GooglePlayServicesAlertDialogFragment;
-import kimle.michal.android.taxitwin.dialog.alert.InternetAlertDialogFragment;
-import kimle.michal.android.taxitwin.dialog.error.GooglePlayServicesErrorDialogFragment;
+import kimle.michal.android.taxitwin.dialog.alert.ServicesAlertDialogFragment;
 import kimle.michal.android.taxitwin.fragment.TaxiTwinListFragment;
 import kimle.michal.android.taxitwin.fragment.TaxiTwinMapFragment;
 import kimle.michal.android.taxitwin.gcm.GcmHandler;
 import kimle.michal.android.taxitwin.gcm.GcmIntentService;
 import kimle.michal.android.taxitwin.popup.SettingsPopup;
+import kimle.michal.android.taxitwin.services.ServicesManagement;
 
 public class MainActivity extends Activity implements
         TaxiTwinMapFragment.MapViewListener {
@@ -51,24 +43,19 @@ public class MainActivity extends Activity implements
     private static final String LOG = "MainActivity";
     private static final int MAP_VIEW_POSITION = 0;
     private static final int LIST_VIEW_POSITION = 1;
-    private static final int PLAY_SERVICES_REQUEST = 9000;
     public static final int OFFER_DETAIL = 11000;
     public static final String CATEGORY_OFFER_DATA_CHANGED = "kimle.michal.android.taxitwin.CATEGORY_OFFER_DATA_CHANGED";
     public static final String CATEGORY_OFFER_ACCEPTED = "kimle.michal.android.taxitwin.CATEGORY_OFFER_ACCEPTED";
     private static final String SAVED_NAVIGATION_POSITION = "savedNavigationPosition";
     private static final String SAVED_MAP_FRAGMENT = "savedMapFragment";
     private static final String SAVED_LIST_FRAGMENT = "savedListFragment";
-//    private static final String SAVED_SUBSCRIBED = "savedSubscribed";
-//    private static final String SAVED_CURRENT_POSITION = "savedcurrentPosition";
     public static final int RESULT_ACCEPT_OFFER = 42;
     private LocationManager locationManager;
     private LocationListener locationListener;
-    private boolean gpsEnabled = false;
     private TaxiTwinMapFragment mapViewFragment;
     private TaxiTwinListFragment listViewFragment;
     private SettingsPopup settingsPopup;
     private MenuItem settingsMenuItem;
-    //private GcmHandler gcmHandler;
     private BroadcastReceiver broadcastReceiver;
 
     @Override
@@ -88,11 +75,6 @@ public class MainActivity extends Activity implements
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         MapsInitializer.initialize(getApplicationContext());
-//        if (savedInstanceState != null) {
-//            gcmHandler = new GcmHandler(this, savedInstanceState.getBoolean(SAVED_SUBSCRIBED), (Place) savedInstanceState.getParcelable(SAVED_CURRENT_POSITION));
-//        } else {
-//            gcmHandler = new GcmHandler(this);
-//        }
 
         broadcastReceiver = new BroadcastReceiver() {
             @Override
@@ -105,10 +87,20 @@ public class MainActivity extends Activity implements
                 if (intent.hasCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED)) {
                     showTaxiTwinDialog();
                 }
+                if (intent.hasCategory(ServicesManagement.CATEGORY_GPS_DISABLED)) {
+                    DialogFragment alertFragment = new ServicesAlertDialogFragment(R.string.services_gps_alert_message);
+                    alertFragment.show(getFragmentManager(), "gps_alert");
+                }
+                if (intent.hasCategory(ServicesManagement.CATEGORY_NETWORK_DISABLED)) {
+                    DialogFragment alertFragment = new ServicesAlertDialogFragment(R.string.services_network_alert_message);
+                    alertFragment.show(getFragmentManager(), "network_alert");
+                }
+                if (intent.hasCategory(ServicesManagement.CATEGORY_GPS_ENABLED)) {
+                    onMapCreated();
+                }
             }
         };
 
-        //checkServices();
         buildGUI(savedInstanceState);
 
         Log.d(LOG, "end of onCreate");
@@ -126,8 +118,12 @@ public class MainActivity extends Activity implements
         intentFilter.addAction(GcmIntentService.ACTION_TAXITWIN);
         intentFilter.addCategory(CATEGORY_OFFER_DATA_CHANGED);
         intentFilter.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED);
+        intentFilter.addCategory(ServicesManagement.CATEGORY_GPS_DISABLED);
+        intentFilter.addCategory(ServicesManagement.CATEGORY_NETWORK_DISABLED);
+        intentFilter.addCategory(ServicesManagement.CATEGORY_GPS_ENABLED);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
-        checkServices();
+        ServicesManagement.initialCheck(this);
+        onMapCreated();
     }
 
     @Override
@@ -135,7 +131,6 @@ public class MainActivity extends Activity implements
         Log.d(LOG, "in onPause");
         super.onPause();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
-        //locationManager.removeUpdates(locationListener);
     }
 
     private void buildGUI(Bundle savedInstanceState) {
@@ -210,8 +205,6 @@ public class MainActivity extends Activity implements
         savedInstanceState.putInt(SAVED_NAVIGATION_POSITION, getActionBar().getSelectedNavigationIndex());
         getFragmentManager().putFragment(savedInstanceState, SAVED_MAP_FRAGMENT, mapViewFragment);
         getFragmentManager().putFragment(savedInstanceState, SAVED_LIST_FRAGMENT, listViewFragment);
-//        savedInstanceState.putBoolean(SAVED_SUBSCRIBED, gcmHandler.isSubscribed());
-//        savedInstanceState.putParcelable(SAVED_CURRENT_POSITION, gcmHandler.getCurrentLocation());
     }
 
     @Override
@@ -249,10 +242,6 @@ public class MainActivity extends Activity implements
                 } else {
                     settingsMenuItem.setIcon(R.drawable.ic_action_collapse);
                     settingsPopup.showAsDropDown(getActionBarView());
-                    //WindowManager.LayoutParams p = (WindowManager.LayoutParams) settingsPopup.getContentView().getLayoutParams();
-                    //p.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
-                    //WindowManager windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-                    //windowManager.updateViewLayout(settingsPopup.getContentView(), p);
                 }
                 return true;
             case R.id.action_responses:
@@ -260,7 +249,7 @@ public class MainActivity extends Activity implements
                 startActivity(i);
                 return true;
             case R.id.action_exit:
-                exit();
+                TaxiTwinApplication.exit(this);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -274,82 +263,7 @@ public class MainActivity extends Activity implements
         return v.findViewById(resId);
     }
 
-    private boolean checkGooglePlayServices() {
-        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-        if (ConnectionResult.SUCCESS == resultCode) {
-            Log.d(LOG, "Google Play services is available");
-            return true;
-        } else {
-            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-                Dialog alertDialog = GooglePlayServicesUtil.getErrorDialog(
-                        resultCode,
-                        this,
-                        PLAY_SERVICES_REQUEST);
-                if (alertDialog != null) {
-                    GooglePlayServicesAlertDialogFragment alertFragment = new GooglePlayServicesAlertDialogFragment();
-                    alertFragment.setDialog(alertDialog);
-                    alertFragment.show(getFragmentManager(), "google_play_services_alert");
-                }
-            } else {
-                DialogFragment errorFragment = new GooglePlayServicesErrorDialogFragment();
-                errorFragment.show(getFragmentManager(), "google_play_services_error");
-            }
-            return false;
-        }
-    }
-
-    private void exit() {
-        TaxiTwinApplication.getGcmHandler().unsubscribe();
-        DbHelper dbHelper = new DbHelper(this);
-        dbHelper.deleteTables(dbHelper.getWritableDatabase());
-        android.os.Process.killProcess(android.os.Process.myPid());
-    }
-
-    private boolean checkGPS() {
-        LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
-        boolean enabled = service.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-        if (enabled) {
-            gpsEnabled = true;
-            Log.d(LOG, "GPS is enabled");
-            return true;
-        } else {
-            DialogFragment alertFragment = new GPSAlertDialogFragment();
-            alertFragment.show(getFragmentManager(), "gps_alert");
-            return false;
-        }
-    }
-
-    public void onDialogNegativeClick(DialogFragment dialog) {
-        exit();
-    }
-
-    private boolean checkInternet() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-
-        if (isConnected) {
-            Log.d(LOG, "connected to the Internet");
-            return true;
-        } else {
-            DialogFragment alertFragment = new InternetAlertDialogFragment();
-            alertFragment.show(getFragmentManager(), "internet_alert");
-            return false;
-        }
-    }
-
-    private void checkServices() {
-        TaxiTwinApplication.getGcmHandler().setGoodToGo(checkGooglePlayServices() && checkGPS() && checkInternet());
-    }
-
     private void requestLocationChanges() {
-//        LocationRequest lr = LocationRequest.create();
-//        lr.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-//        //every 20 seconds
-//        lr.setInterval(20000);
-//        //every 5 seconds top
-//        lr.setFastestInterval(5000);
         locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the gps location provider.
@@ -363,16 +277,12 @@ public class MainActivity extends Activity implements
             }
 
             public void onProviderEnabled(String provider) {
-                gpsEnabled = true;
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 3, this);
-                checkServices();
                 Log.d(LOG, "onProviderEnabled");
             }
 
             public void onProviderDisabled(String provider) {
-                gpsEnabled = false;
                 locationManager.removeUpdates(this);
-                checkServices();
                 Log.d(LOG, "onProviderDisabled");
             }
         };
@@ -392,23 +302,13 @@ public class MainActivity extends Activity implements
     }
 
     public void onMapCreated() {
-        if (gpsEnabled) {
+        Log.d(LOG, "onMapCreated");
+        if (ServicesManagement.checkServices(this)) {
+            Log.d(LOG, "serices checked");
             requestLocationChanges();
         }
     }
 
-//    @Override
-//    protected void onNewIntent(Intent intent) {
-//        super.onNewIntent(intent);
-//        setIntent(intent);
-//
-//        Log.d(LOG, "in onNewIntent");
-//        Log.d(LOG, "intent: " + intent);
-//
-//        if (intent.hasCategory(CATEGORY_OFFER_DATA_CHANGED)) {
-//            notifyChangedData();
-//        }
-//    }
     private void notifyChangedData() {
         listViewFragment.updateView();
         mapViewFragment.loadData();

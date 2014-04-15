@@ -6,17 +6,20 @@ import kimle.michal.android.taxitwin.db.DbHelper;
 import kimle.michal.android.taxitwin.enumerate.UserState;
 import static kimle.michal.android.taxitwin.enumerate.UserState.NO_RIDE;
 import kimle.michal.android.taxitwin.gcm.GcmHandler;
+import kimle.michal.android.taxitwin.services.ServicesManagement;
 
 public class TaxiTwinApplication extends Application {
 
     private static int pendingNotificationsCount = 0;
     private static GcmHandler gcmHandler;
     private static UserState userState = NO_RIDE;
+    private ServicesManagement servicesManagement;
 
     @Override
     public void onCreate() {
         super.onCreate();
         gcmHandler = new GcmHandler(this);
+        servicesManagement = new ServicesManagement(this);
     }
 
     public static int getPendingNotificationsCount() {

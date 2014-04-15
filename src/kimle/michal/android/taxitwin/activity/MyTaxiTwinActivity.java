@@ -2,14 +2,12 @@ package kimle.michal.android.taxitwin.activity;
 
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
-import static android.content.Context.LOCATION_SERVICE;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
@@ -18,8 +16,6 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
@@ -28,8 +24,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TextView;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -46,14 +40,12 @@ import kimle.michal.android.taxitwin.R;
 import kimle.michal.android.taxitwin.application.TaxiTwinApplication;
 import kimle.michal.android.taxitwin.contentprovider.TaxiTwinContentProvider;
 import kimle.michal.android.taxitwin.db.DbContract;
-import kimle.michal.android.taxitwin.dialog.alert.GPSAlertDialogFragment;
-import kimle.michal.android.taxitwin.dialog.alert.GooglePlayServicesAlertDialogFragment;
-import kimle.michal.android.taxitwin.dialog.alert.InternetAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.LeaveTaxiTwinAlertDialogFragment;
+import kimle.michal.android.taxitwin.dialog.alert.ServicesAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.TaxiTwinAlertDialogFragment;
 import kimle.michal.android.taxitwin.dialog.alert.TaxiTwinNoLongerAlertDialogFragment;
-import kimle.michal.android.taxitwin.dialog.error.GooglePlayServicesErrorDialogFragment;
 import kimle.michal.android.taxitwin.gcm.GcmIntentService;
+import kimle.michal.android.taxitwin.services.ServicesManagement;
 
 public class MyTaxiTwinActivity extends Activity {
 
@@ -74,7 +66,6 @@ public class MyTaxiTwinActivity extends Activity {
     private LocationManager locationManager;
     private LocationListener locationListener;
     private boolean gpsEnabled = false;
-    private static final int PLAY_SERVICES_REQUEST = 9000;
     private Geocoder geocoder;
 
     @Override
@@ -102,6 +93,17 @@ public class MyTaxiTwinActivity extends Activity {
                 }
                 if (intent.hasCategory(CATEGORY_TAXITWIN_NO_LONGER)) {
                     showTaxiTwinNoLongerDialog();
+                }
+                if (intent.hasCategory(ServicesManagement.CATEGORY_GPS_DISABLED)) {
+                    DialogFragment alertFragment = new ServicesAlertDialogFragment(R.string.services_gps_alert_message);
+                    alertFragment.show(getFragmentManager(), "gps_alert");
+                }
+                if (intent.hasCategory(ServicesManagement.CATEGORY_NETWORK_DISABLED)) {
+                    DialogFragment alertFragment = new ServicesAlertDialogFragment(R.string.services_network_alert_message);
+                    alertFragment.show(getFragmentManager(), "network_alert");
+                }
+                if (intent.hasCategory(ServicesManagement.CATEGORY_GPS_ENABLED)) {
+                    requestLocationChanges();
                 }
             }
         };
@@ -139,8 +141,11 @@ public class MyTaxiTwinActivity extends Activity {
         intentFilter.addCategory(CATEGORY_TAXITWIN_DATA_CHANGED);
         intentFilter.addCategory(CATEGORY_TAXITWIN_NO_LONGER);
         intentFilter.addCategory(MainActivity.CATEGORY_OFFER_DATA_CHANGED);
+        intentFilter.addCategory(ServicesManagement.CATEGORY_GPS_DISABLED);
+        intentFilter.addCategory(ServicesManagement.CATEGORY_NETWORK_DISABLED);
+        intentFilter.addCategory(ServicesManagement.CATEGORY_GPS_ENABLED);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
-        checkServices();
+        ServicesManagement.initialCheck(this);
     }
 
     @Override
@@ -188,60 +193,6 @@ public class MyTaxiTwinActivity extends Activity {
         super.onPrepareOptionsMenu(menu);
         responsesMenuItem.setVisible(owner);
         return true;
-    }
-
-    private boolean checkGooglePlayServices() {
-        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-        if (ConnectionResult.SUCCESS == resultCode) {
-            return true;
-        } else {
-            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-                Dialog alertDialog = GooglePlayServicesUtil.getErrorDialog(
-                        resultCode,
-                        this,
-                        PLAY_SERVICES_REQUEST);
-                if (alertDialog != null) {
-                    GooglePlayServicesAlertDialogFragment alertFragment = new GooglePlayServicesAlertDialogFragment();
-                    alertFragment.setDialog(alertDialog);
-                    alertFragment.show(getFragmentManager(), "google_play_services_alert");
-                }
-            }
-            DialogFragment errorFragment = new GooglePlayServicesErrorDialogFragment();
-            errorFragment.show(getFragmentManager(), "google_play_services_error");
-            return false;
-        }
-    }
-
-    private boolean checkGPS() {
-        LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
-        boolean enabled = service.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-        if (enabled) {
-            gpsEnabled = true;
-            return true;
-        } else {
-            DialogFragment alertFragment = new GPSAlertDialogFragment();
-            alertFragment.show(getFragmentManager(), "gps_alert");
-            return false;
-        }
-    }
-
-    private boolean checkInternet() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-
-        if (isConnected) {
-            return true;
-        } else {
-            DialogFragment alertFragment = new InternetAlertDialogFragment();
-            alertFragment.show(getFragmentManager(), "internet_alert");
-            return false;
-        }
-    }
-
-    private void checkServices() {
-        TaxiTwinApplication.getGcmHandler().setGoodToGo(checkGooglePlayServices() && checkGPS() && checkInternet());
     }
 
     private void requestLocationChanges() {
@@ -294,13 +245,11 @@ public class MyTaxiTwinActivity extends Activity {
             public void onProviderEnabled(String provider) {
                 gpsEnabled = true;
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 3, this);
-                checkServices();
             }
 
             public void onProviderDisabled(String provider) {
                 gpsEnabled = false;
                 locationManager.removeUpdates(this);
-                checkServices();
             }
         };
         //every 10 seconds and at least 3 meters
