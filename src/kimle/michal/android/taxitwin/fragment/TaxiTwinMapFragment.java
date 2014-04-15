@@ -1,15 +1,18 @@
 package kimle.michal.android.taxitwin.fragment;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
@@ -31,25 +34,21 @@ import kimle.michal.android.taxitwin.db.DbContract;
 
 public class TaxiTwinMapFragment extends MapFragment implements OnMarkerClickListener {
 
-    public interface MapViewListener {
-
-        public abstract void onMapCreated();
-    }
-
     private static final String LOG = "TaxiTwinMapFragment";
     private static final int PADDING = 50;
-    private MapViewListener mapViewListener;
     private Map<Marker, Long> markers;
     private Marker currentMarker;
     private Location currentLocation;
     private boolean mapReady = false;
     private boolean updateMap = false;
+    private LocationManager locationManager;
+    private LocationListener locationListener;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = super.onCreateView(inflater, container, savedInstanceState);
         Log.d(LOG, "in onCreateView");
-        Log.d(LOG, "mapViewListener: " + mapViewListener);
+        locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         if (getMap() != null) {
             getMap().setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
                 @Override
@@ -61,23 +60,44 @@ public class TaxiTwinMapFragment extends MapFragment implements OnMarkerClickLis
                 }
             });
             getMap().setOnMarkerClickListener(this);
-            if (mapViewListener != null) {
-                mapViewListener.onMapCreated();
-            }
         }
         return view;
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        Log.d(LOG, "in onAttach");
-        try {
-            mapViewListener = (MapViewListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement MapViewListener");
-        }
+    public void onResume() {
+        super.onResume();
+        requestLocationChanges();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        locationManager.removeUpdates(locationListener);
+    }
+
+    private void requestLocationChanges() {
+        locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                updateCurrentLocation(location);
+                Log.d(LOG, "onLocationChanged");
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            public void onProviderEnabled(String provider) {
+                //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 3, this);
+                Log.d(LOG, "onProviderEnabled");
+            }
+
+            public void onProviderDisabled(String provider) {
+                //locationManager.removeUpdates(this);
+                Log.d(LOG, "onProviderDisabled");
+            }
+        };
+        //every 10 seconds and at least 3 meters
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 3, locationListener);
     }
 
     public void loadData() {
@@ -132,6 +152,13 @@ public class TaxiTwinMapFragment extends MapFragment implements OnMarkerClickLis
             currentMarker.setPosition(currentLatLng);
         }
 
+        TextView bottomText = (TextView) getActivity().findViewById(R.id.bottom_text);
+        bottomText.setText("");
+
+        if (!mapReady) {
+            updateMap = true;
+            return;
+        }
         updateCamera();
     }
 

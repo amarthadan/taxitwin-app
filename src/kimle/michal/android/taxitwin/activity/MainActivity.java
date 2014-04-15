@@ -12,9 +12,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
@@ -40,7 +37,6 @@ import kimle.michal.android.taxitwin.popup.SettingsPopup;
 import kimle.michal.android.taxitwin.services.ServicesManagement;
 
 public class MainActivity extends Activity implements
-        TaxiTwinMapFragment.MapViewListener,
         SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String LOG = "MainActivity";
@@ -53,8 +49,6 @@ public class MainActivity extends Activity implements
     private static final String SAVED_MAP_FRAGMENT = "savedMapFragment";
     private static final String SAVED_LIST_FRAGMENT = "savedListFragment";
     public static final int RESULT_ACCEPT_OFFER = 42;
-    private LocationManager locationManager;
-    private LocationListener locationListener;
     private TaxiTwinMapFragment mapViewFragment;
     private TaxiTwinListFragment listViewFragment;
     private SettingsPopup settingsPopup;
@@ -76,7 +70,6 @@ public class MainActivity extends Activity implements
             }
         });
 
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         MapsInitializer.initialize(getApplicationContext());
 
         broadcastReceiver = new BroadcastReceiver() {
@@ -97,9 +90,6 @@ public class MainActivity extends Activity implements
                 if (intent.hasCategory(ServicesManagement.CATEGORY_NETWORK_DISABLED)) {
                     DialogFragment alertFragment = new ServicesAlertDialogFragment(R.string.services_network_alert_message);
                     alertFragment.show(getFragmentManager(), "network_alert");
-                }
-                if (intent.hasCategory(ServicesManagement.CATEGORY_GPS_ENABLED)) {
-                    onMapCreated();
                 }
             }
         };
@@ -123,10 +113,8 @@ public class MainActivity extends Activity implements
         intentFilter.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_DATA_CHANGED);
         intentFilter.addCategory(ServicesManagement.CATEGORY_GPS_DISABLED);
         intentFilter.addCategory(ServicesManagement.CATEGORY_NETWORK_DISABLED);
-        intentFilter.addCategory(ServicesManagement.CATEGORY_GPS_ENABLED);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
         ServicesManagement.initialCheck(this);
-        onMapCreated();
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
     }
 
@@ -199,7 +187,9 @@ public class MainActivity extends Activity implements
             actionBar.setSelectedNavigationItem(savedInstanceState.getInt(SAVED_NAVIGATION_POSITION));
         }
 
-        addWaitForGPSSignal();
+        TextView bottomText = (TextView) findViewById(R.id.bottom_text);
+        bottomText.setText(R.string.waiting_for_signal);
+        bottomText.setTextColor(Color.GRAY);
     }
 
     @Override
@@ -270,57 +260,6 @@ public class MainActivity extends Activity implements
         View v = window.getDecorView();
         int resId = getResources().getIdentifier("action_bar_container", "id", "android");
         return v.findViewById(resId);
-    }
-
-    private void requestLocationChanges() {
-        locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                // Called when a new location is found by the gps location provider.
-                updateLocation(location);
-                Log.d(LOG, "onLocationChanged");
-            }
-
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-            }
-
-            public void onProviderEnabled(String provider) {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 3, this);
-                Log.d(LOG, "onProviderEnabled");
-            }
-
-            public void onProviderDisabled(String provider) {
-                locationManager.removeUpdates(this);
-                Log.d(LOG, "onProviderDisabled");
-            }
-        };
-        //every 10 seconds and at least 3 meters
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 3, locationListener);
-    }
-
-    private void updateLocation(Location location) {
-        mapViewFragment.updateCurrentLocation(location);
-        GcmHandler gcmHandler = new GcmHandler(this);
-        gcmHandler.locationChanged(location);
-        removeWaitForGPSSignal();
-    }
-
-    private void addWaitForGPSSignal() {
-        TextView bottomText = (TextView) findViewById(R.id.bottom_text);
-        bottomText.setText(R.string.waiting_for_signal);
-        bottomText.setTextColor(Color.GRAY);
-    }
-
-    private void removeWaitForGPSSignal() {
-        TextView bottomText = (TextView) findViewById(R.id.bottom_text);
-        bottomText.setText("");
-    }
-
-    public void onMapCreated() {
-        Log.d(LOG, "onMapCreated");
-        if (ServicesManagement.checkServices(this)) {
-            Log.d(LOG, "serices checked");
-            requestLocationChanges();
-        }
     }
 
     private void notifyChangedData() {

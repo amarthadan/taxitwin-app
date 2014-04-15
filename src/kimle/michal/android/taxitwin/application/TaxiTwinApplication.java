@@ -38,8 +38,6 @@ public class TaxiTwinApplication extends Application {
             }
 
             public void onProviderDisabled(String provider) {
-                LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                locationManager.removeUpdates(this);
             }
         };
         //every 10 seconds and at least 3 meters
