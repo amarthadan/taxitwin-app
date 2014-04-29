@@ -14,7 +14,7 @@
             android:id="@+id/address_string"
             android:layout_width="0px"
             android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_weight="2"
             android:gravity="center_vertical"
             android:paddingLeft="5pt"
             android:text="@string/address"/>
@@ -28,9 +28,16 @@
             android:id="@+id/address_content"
             android:layout_width="0px"
             android:layout_height="match_parent"
-            android:layout_weight="7"
+            android:layout_weight="9"
             android:cursorVisible="false"
             android:completionThreshold="4"/>
+        <ImageButton
+            android:id="@+id/address_clear"
+            android:layout_width="0px"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@drawable/ic_action_cancel"
+            style="?android:attr/borderlessButtonStyle"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"

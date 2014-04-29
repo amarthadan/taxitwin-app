@@ -10,7 +10,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageButton;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -53,13 +56,13 @@ public class SettingsPopup extends PopupWindow {
     private static final String LOG = "SettingsPopup";
     private static final String STATUS_OK = "OK";
 
-    public SettingsPopup(Context context) {
-        super(context);
-        this.context = context;
+    public SettingsPopup(Context c) {
+        super(c);
+        this.context = c;
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         popupView = inflater.inflate(R.layout.popup, null);
         setContentView(popupView);
-        TaxiTwinAutoCompleteTextView ttactv = (TaxiTwinAutoCompleteTextView) popupView.findViewById(R.id.address_content);
+        final TaxiTwinAutoCompleteTextView ttactv = (TaxiTwinAutoCompleteTextView) popupView.findViewById(R.id.address_content);
         ttactv.setSuperView(((Activity) context).getWindow().getDecorView());
         ttactv.setDropDownAnchor(context.getResources().getIdentifier("action_bar_container", "id", "android"));
         ttactv.setDropDownVerticalOffset(OFFSET);
@@ -71,6 +74,27 @@ public class SettingsPopup extends PopupWindow {
         //setBackgroundDrawable(null);
         setOutsideTouchable(false);
 
+        ttactv.setOnFocusChangeListener(new OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                ttactv.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.showSoftInput(ttactv, InputMethodManager.SHOW_IMPLICIT);
+                    }
+                });
+            }
+        });
+        ttactv.requestFocus();
+
+        ImageButton clear = (ImageButton) popupView.findViewById(R.id.address_clear);
+        clear.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                ttactv.setText("");
+            }
+        });
+
         createDefaultPreferences();
         loadPreferences();
         createListeners();
@@ -79,6 +103,8 @@ public class SettingsPopup extends PopupWindow {
     @Override
     public void showAsDropDown(View v) {
         super.showAsDropDown(v);
+        TaxiTwinAutoCompleteTextView ttactv = (TaxiTwinAutoCompleteTextView) popupView.findViewById(R.id.address_content);
+        ttactv.requestFocus();
         loadPreferences();
     }
 
@@ -118,7 +144,7 @@ public class SettingsPopup extends PopupWindow {
         TextView radiusContent = (TextView) popupView.findViewById(R.id.radius_content);
         radiusContent.setText(String.valueOf(pref.getInt(context.getResources().getString(R.string.pref_radius), DEFAULT_RADIUS)) + "m");
         SeekBar radiusSeekBar = (SeekBar) popupView.findViewById(R.id.radius_seekbar);
-        radiusSeekBar.setProgress(pref.getInt(context.getResources().getString(R.string.pref_radius), DEFAULT_RADIUS) / 10 - 10);
+        radiusSeekBar.setProgress((pref.getInt(context.getResources().getString(R.string.pref_radius), DEFAULT_RADIUS) - 10) / 10);
     }
 
     private void createListeners() {

@@ -15,6 +15,8 @@ public class LauncherActivity extends Activity {
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         Intent intent;
+        TaxiTwinApplication app = (TaxiTwinApplication) getApplication();
+        app.register();
         switch (TaxiTwinApplication.getUserState()) {
             case NOT_SUBSCRIBED:
             case SUBSCRIBED:
@@ -28,7 +30,7 @@ public class LauncherActivity extends Activity {
             case OWNER:
                 intent = new Intent(this, MyTaxiTwinActivity.class);
                 intent.addFlags(FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK);
-                intent.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_OWNER);
+                //intent.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_OWNER);
                 break;
             default:
                 intent = new Intent(this, MainActivity.class);

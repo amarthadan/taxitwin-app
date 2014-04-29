@@ -17,14 +17,21 @@ public class TaxiTwinApplication extends Application {
     private static int pendingNotificationsCount = 0;
     private static UserState userState = NOT_SUBSCRIBED;
     private ServicesManagement servicesManagement;
+    private LocationListener locationListener;
 
     @Override
     public void onCreate() {
         super.onCreate();
+    }
 
+    public void unregister() {
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager.removeUpdates(locationListener);
+    }
+
+    public void register() {
         servicesManagement = new ServicesManagement(this);
-
-        LocationListener locationListener = new LocationListener() {
+        locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 locationUpdate(location);
             }
@@ -72,6 +79,15 @@ public class TaxiTwinApplication extends Application {
             gcmHandler.leaveTaxiTwin();
         }
         gcmHandler.unsubscribe();
+
+//        ComponentName receiver = new ComponentName(context, GcmBroadcastReceiver.class);
+//        PackageManager pm = context.getPackageManager();
+//        pm.setComponentEnabledSetting(receiver,
+//                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+//                PackageManager.DONT_KILL_APP);
+        TaxiTwinApplication app = (TaxiTwinApplication) context.getApplicationContext();
+        app.unregister();
+
         DbHelper dbHelper = new DbHelper(context);
         dbHelper.deleteTables(dbHelper.getWritableDatabase());
         android.os.Process.killProcess(android.os.Process.myPid());

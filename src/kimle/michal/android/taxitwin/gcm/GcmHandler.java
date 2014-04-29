@@ -2,10 +2,12 @@ package kimle.michal.android.taxitwin.gcm;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.content.ComponentName;
 import android.content.Context;
 import static android.content.Context.ACCOUNT_SERVICE;
 import static android.content.Context.LOCATION_SERVICE;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationManager;
@@ -96,6 +98,11 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
 
+//        ComponentName receiver = new ComponentName(context, GcmBroadcastReceiver.class);
+//        PackageManager pm = context.getPackageManager();
+//        pm.setComponentEnabledSetting(receiver,
+//                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+//                PackageManager.DONT_KILL_APP);
         Bundle data = new Bundle();
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_SUBSCRIBE);
         data.putString(GCM_DATA_START_LATITUDE, String.valueOf(location.getLatitude()));

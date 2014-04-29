@@ -363,7 +363,37 @@ public class GcmIntentService extends IntentService {
     }
 
     private void noLonger(Bundle extras) {
+        long taxitwinId = 0;
+        String[] projection = {DbContract.DbEntry.TAXITWIN_ID_COLUMN};
+        Cursor cursor = getContentResolver().query(TaxiTwinContentProvider.RIDES_URI, projection, null, null, null);
+        if (cursor != null && cursor.getCount() != 0) {
+            cursor.moveToFirst();
+            taxitwinId = cursor.getLong(cursor.getColumnIndexOrThrow(DbContract.DbEntry._ID));
+        }
+
+        if (taxitwinId != 0) {
+            if (TaxiTwinApplication.getUserState() == UserState.OWNER) {
+                Uri uri = Uri.parse(TaxiTwinContentProvider.TAXITWINS_URI + "/" + taxitwinId);
+                getContentResolver().delete(uri, null, null);
+            } else {
+                String[] proj = {DbContract.DbEntry.OFFER_ID_COLUMN};
+                String selection = DbContract.DbEntry.OFFER_TAXITWIN_ID_COLUMN + " = ?";
+                String[] selectionArgs = {String.valueOf(taxitwinId)};
+                Cursor c = getContentResolver().query(TaxiTwinContentProvider.OFFERS_URI, proj, selection, selectionArgs, null);
+                if (c != null && c.getCount() != 0) {
+                    c.moveToFirst();
+                    long offerId = c.getLong(c.getColumnIndexOrThrow(DbContract.DbEntry._ID));
+
+                    Uri uri = Uri.parse(TaxiTwinContentProvider.OFFERS_URI + "/" + offerId);
+                    ContentValues contentValues = new ContentValues();
+                    contentValues.put(DbContract.DbEntry.OFFER_PASSENGERS_COLUMN, 0);
+                    getContentResolver().update(uri, contentValues, null, null);
+                }
+            }
+        }
+
         getContentResolver().delete(TaxiTwinContentProvider.RIDES_URI, null, null);
+        TaxiTwinApplication.setUserState(UserState.SUBSCRIBED);
 
         if (isAppInForeground()) {
             Intent intent = new Intent(ACTION_TAXITWIN);

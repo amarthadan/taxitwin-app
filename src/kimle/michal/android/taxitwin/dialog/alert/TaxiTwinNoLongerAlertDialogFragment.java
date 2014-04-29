@@ -20,6 +20,7 @@ public class TaxiTwinNoLongerAlertDialogFragment extends DialogFragment {
                     public void onClick(DialogInterface dialog, int id) {
                         Intent intent = new Intent(getActivity(), MainActivity.class);
                         getActivity().startActivity(intent);
+                        getActivity().finish();
                         dismiss();
                     }
                 });
