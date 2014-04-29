@@ -80,11 +80,6 @@ public class TaxiTwinApplication extends Application {
         }
         gcmHandler.unsubscribe();
 
-//        ComponentName receiver = new ComponentName(context, GcmBroadcastReceiver.class);
-//        PackageManager pm = context.getPackageManager();
-//        pm.setComponentEnabledSetting(receiver,
-//                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-//                PackageManager.DONT_KILL_APP);
         TaxiTwinApplication app = (TaxiTwinApplication) context.getApplicationContext();
         app.unregister();
 

@@ -8,7 +8,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +33,6 @@ import kimle.michal.android.taxitwin.db.DbContract;
 
 public class TaxiTwinMapFragment extends MapFragment implements OnMarkerClickListener {
 
-    private static final String LOG = "TaxiTwinMapFragment";
     private static final int PADDING = 50;
     private Map<Marker, Long> markers;
     private Marker currentMarker;
@@ -47,7 +45,6 @@ public class TaxiTwinMapFragment extends MapFragment implements OnMarkerClickLis
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = super.onCreateView(inflater, container, savedInstanceState);
-        Log.d(LOG, "in onCreateView");
         locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         if (getMap() != null) {
             getMap().setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
@@ -80,20 +77,15 @@ public class TaxiTwinMapFragment extends MapFragment implements OnMarkerClickLis
         locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 updateCurrentLocation(location);
-                Log.d(LOG, "onLocationChanged");
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
             }
 
             public void onProviderEnabled(String provider) {
-                //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 3, this);
-                Log.d(LOG, "onProviderEnabled");
             }
 
             public void onProviderDisabled(String provider) {
-                //locationManager.removeUpdates(this);
-                Log.d(LOG, "onProviderDisabled");
             }
         };
         //every 10 seconds and at least 3 meters
@@ -126,7 +118,6 @@ public class TaxiTwinMapFragment extends MapFragment implements OnMarkerClickLis
                 markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.flag));
                 markerOptions.anchor(0.11f, 0.93f);
                 Marker marker = getMap().addMarker(markerOptions);
-                Log.d(LOG, "marker: " + marker.toString());
 
                 markers.put(marker, id);
             } while (cursor.moveToNext());
@@ -134,11 +125,9 @@ public class TaxiTwinMapFragment extends MapFragment implements OnMarkerClickLis
         }
 
         updateCamera();
-        Log.d(LOG, "markers: " + markers);
     }
 
     public void updateCurrentLocation(Location location) {
-        Log.d(LOG, "location: " + location);
         currentLocation = location;
         LatLng currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
 
@@ -196,7 +185,6 @@ public class TaxiTwinMapFragment extends MapFragment implements OnMarkerClickLis
     }
 
     public boolean onMarkerClick(Marker marker) {
-        Log.d(LOG, "clicked marker: " + marker);
         if (!markers.containsKey(marker)) {
             return false;
         }

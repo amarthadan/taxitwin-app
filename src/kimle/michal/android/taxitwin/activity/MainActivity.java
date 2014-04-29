@@ -15,7 +15,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -39,7 +38,6 @@ import kimle.michal.android.taxitwin.services.ServicesManagement;
 public class MainActivity extends Activity implements
         SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private static final String LOG = "MainActivity";
     private static final int MAP_VIEW_POSITION = 0;
     private static final int LIST_VIEW_POSITION = 1;
     public static final int OFFER_DETAIL = 11000;
@@ -60,8 +58,6 @@ public class MainActivity extends Activity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        Log.d(LOG, "savedInstanceState: " + savedInstanceState);
-
         settingsPopup = new SettingsPopup(this);
         settingsPopup.setOnDismissListener(new OnDismissListener() {
 
@@ -75,8 +71,6 @@ public class MainActivity extends Activity implements
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.d(LOG, "in onReceive");
-                Log.d(LOG, "intent: " + intent);
                 if (intent.hasCategory(CATEGORY_OFFER_DATA_CHANGED)) {
                     notifyChangedData();
                 }
@@ -95,13 +89,10 @@ public class MainActivity extends Activity implements
         };
 
         buildGUI(savedInstanceState);
-
-        Log.d(LOG, "end of onCreate");
     }
 
     @Override
     protected void onResume() {
-        Log.d(LOG, "in onResume");
         super.onResume();
         if (MyTaxiTwinActivity.isInTaxiTwin(this)) {
             showTaxiTwinDialog();
@@ -120,7 +111,6 @@ public class MainActivity extends Activity implements
 
     @Override
     protected void onPause() {
-        Log.d(LOG, "in onPause");
         super.onPause();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     }
@@ -132,7 +122,6 @@ public class MainActivity extends Activity implements
         FragmentManager fm = getFragmentManager();
 
         if (savedInstanceState != null) {
-            Log.d(LOG, "loading fragments form bundle...");
             mapViewFragment = (TaxiTwinMapFragment) fm.getFragment(savedInstanceState, SAVED_MAP_FRAGMENT);
             listViewFragment = (TaxiTwinListFragment) fm.getFragment(savedInstanceState, SAVED_LIST_FRAGMENT);
         } else {
@@ -167,12 +156,10 @@ public class MainActivity extends Activity implements
                     ft.hide(mapViewFragment);
                     ft.show(listViewFragment);
                     listViewFragment.updateView();
-                    Log.d(LOG, "in if, position:" + position);
                 } else if (position == MAP_VIEW_POSITION) {
                     ft.hide(listViewFragment);
                     ft.show(mapViewFragment);
                     mapViewFragment.loadData();
-                    Log.d(LOG, "in else, position:" + position);
                 }
                 ft.commit();
                 fm.executePendingTransactions();
@@ -195,7 +182,6 @@ public class MainActivity extends Activity implements
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-        Log.d(LOG, "in onSaveInstanceState");
         savedInstanceState.putInt(SAVED_NAVIGATION_POSITION, getActionBar().getSelectedNavigationIndex());
         getFragmentManager().putFragment(savedInstanceState, SAVED_MAP_FRAGMENT, mapViewFragment);
         getFragmentManager().putFragment(savedInstanceState, SAVED_LIST_FRAGMENT, listViewFragment);
@@ -203,11 +189,8 @@ public class MainActivity extends Activity implements
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(LOG, "requestCode: " + requestCode);
         switch (requestCode) {
             case OFFER_DETAIL:
-                Log.d(LOG, "offer accepted");
-                Log.d(LOG, "resultCode: " + resultCode);
                 if (resultCode == RESULT_ACCEPT_OFFER) {
                     acceptOffer(data.getLongExtra(GcmHandler.GCM_DATA_TAXITWIN_ID, 0));
                 }

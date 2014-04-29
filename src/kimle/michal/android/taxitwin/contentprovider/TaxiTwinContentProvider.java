@@ -135,7 +135,6 @@ public class TaxiTwinContentProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
         }
-        Log.d(LOG, queryBuilder.buildQuery(projection, selection, selectionArgs, null, null, sortOrder, null));
         cursor = queryBuilder.query(db, projection, selection, selectionArgs, null, null, sortOrder, null);
         return cursor;
     }

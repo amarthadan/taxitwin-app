@@ -39,9 +39,7 @@ public class GcmConnector {
     private boolean isRegistred() {
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
         String gcmId = pref.getString(context.getResources().getString(R.string.pref_gcm_id), "");
-        Log.d(LOG, "gcmId: " + gcmId);
         return !gcmId.isEmpty();
-        //return false;
     }
 
     private void register() {
@@ -50,12 +48,10 @@ public class GcmConnector {
             protected Void doInBackground(Void... params) {
                 try {
                     String regid = gcm.register(SENDER_ID);
-                    Log.d(LOG, "regid: " + regid);
                     SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
                     SharedPreferences.Editor editor = pref.edit();
                     editor.putString(context.getResources().getString(R.string.pref_gcm_id), regid);
                     editor.commit();
-                    Log.d(LOG, "registered...");
                 } catch (IOException ex) {
                     Log.e(LOG, ex.getMessage());
                 }
@@ -72,9 +68,7 @@ public class GcmConnector {
             protected Void doInBackground(Bundle... data) {
                 try {
                     String id = Integer.toString(messageId.incrementAndGet());
-                    Log.d(LOG, "message: " + data[0]);
                     gcm.send(SENDER_ID + GCM_SERVER, id, TTL, data[0]);
-                    Log.d(LOG, "message sent...");
                 } catch (IOException ex) {
                     Log.e(LOG, ex.getMessage());
                 }

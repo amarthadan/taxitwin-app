@@ -71,7 +71,6 @@ public class SettingsPopup extends PopupWindow {
         setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
         setFocusable(true);
         setTouchable(true);
-        //setBackgroundDrawable(null);
         setOutsideTouchable(false);
 
         ttactv.setOnFocusChangeListener(new OnFocusChangeListener() {
@@ -112,7 +111,6 @@ public class SettingsPopup extends PopupWindow {
     public void dismiss() {
         super.dismiss();
         if (!hasAddress()) {
-            Log.d(LOG, "in dismiss");
             DialogFragment errorFragment = new AddressAlertDialogFragment();
             errorFragment.show(((Activity) context).getFragmentManager(), "address_alert");
         }
@@ -136,7 +134,6 @@ public class SettingsPopup extends PopupWindow {
         TaxiTwinAutoCompleteTextView addressContent = (TaxiTwinAutoCompleteTextView) popupView.findViewById(R.id.address_content);
         addressContent.setText(pref.getString(context.getResources().getString(R.string.pref_address), null));
         addressContent.dismissDropDown();
-        //addressContent.setText("");
         TextView passengersContent = (TextView) popupView.findViewById(R.id.nop_content);
         passengersContent.setText(String.valueOf(pref.getInt(context.getResources().getString(R.string.pref_passengers), DEFAULT_PASSENGERS)));
         SeekBar passengersSeekBar = (SeekBar) popupView.findViewById(R.id.nop_seekbar);
@@ -216,8 +213,6 @@ public class SettingsPopup extends PopupWindow {
                     return;
                 }
 
-                Log.d(LOG, "place: " + place);
-
                 editor.putString(context.getResources().getString(R.string.pref_address), place.getAddress());
                 editor.putFloat(context.getResources().getString(R.string.pref_address_long), place.getLongitude().floatValue());
                 editor.putFloat(context.getResources().getString(R.string.pref_address_lat), place.getLatitude().floatValue());
@@ -272,8 +267,6 @@ public class SettingsPopup extends PopupWindow {
                     return result;
                 }
 
-                Log.d(LOG, "results: " + geocodeResult.results.get(0).geometry);
-                //return null;
                 Result firstResult = geocodeResult.results.get(0);
                 result = new Place(firstResult.address, firstResult.geometry.location.latitude, firstResult.geometry.location.longitude);
 

@@ -52,10 +52,8 @@ import kimle.michal.android.taxitwin.services.ServicesManagement;
 public class MyTaxiTwinActivity extends Activity {
 
     private static final String LOG = "MyTaxiTwinActivity";
-    //public static final String CATEGORY_TAXITWIN_OWNER = "kimle.michal.android.taxitwin.CATEGORY_TAXITWIN_OWNER";
     public static final String CATEGORY_TAXITWIN_DATA_CHANGED = "kimle.michal.android.taxitwin.CATEGORY_TAXITWIN_DATA_CHANGED";
     public static final String CATEGORY_TAXITWIN_NO_LONGER = "kimle.michal.android.taxitwin.CATEGORY_TAXITWIN_NO_LONGER";
-    //private static final String SAVED_OWNER = "saved_owner";
     private boolean owner = false;
     private MenuItem responsesMenuItem;
     private BroadcastReceiver broadcastReceiver;
@@ -67,7 +65,6 @@ public class MyTaxiTwinActivity extends Activity {
     private GoogleMap map;
     private LocationManager locationManager;
     private LocationListener locationListener;
-    //private boolean gpsEnabled = false;
     private Geocoder geocoder;
 
     @Override
@@ -75,12 +72,6 @@ public class MyTaxiTwinActivity extends Activity {
         super.onCreate(icicle);
         setContentView(R.layout.taxitwin);
 
-//        if (getIntent().hasCategory(CATEGORY_TAXITWIN_OWNER)) {
-//            owner = true;
-//        }
-//        if (icicle != null && icicle.containsKey(SAVED_OWNER)) {
-//            owner = icicle.getBoolean(SAVED_OWNER);
-//        }
         if (TaxiTwinApplication.getUserState() == UserState.OWNER) {
             owner = true;
         }
@@ -125,9 +116,7 @@ public class MyTaxiTwinActivity extends Activity {
             @Override
             public void onMapLoaded() {
                 mapReady = true;
-                //if (gpsEnabled) {
                 requestLocationChanges();
-                //}
                 fillMap();
             }
         });
@@ -161,11 +150,6 @@ public class MyTaxiTwinActivity extends Activity {
         locationManager.removeUpdates(locationListener);
     }
 
-//    @Override
-//    public void onSaveInstanceState(Bundle savedInstanceState) {
-//        super.onSaveInstanceState(savedInstanceState);
-//        savedInstanceState.putBoolean(SAVED_OWNER, owner);
-//    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -206,7 +190,6 @@ public class MyTaxiTwinActivity extends Activity {
                 if (owner) {
                     String addressString = null;
                     if (Geocoder.isPresent()) {
-                        Log.d(LOG, "geocoder present");
                         try {
                             Address address = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1).get(0);
                             addressString = address.getAddressLine(0);
@@ -249,13 +232,9 @@ public class MyTaxiTwinActivity extends Activity {
             }
 
             public void onProviderEnabled(String provider) {
-                //gpsEnabled = true;
-                //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 3, this);
             }
 
             public void onProviderDisabled(String provider) {
-                //gpsEnabled = false;
-                //locationManager.removeUpdates(this);
             }
         };
         //every 10 seconds and at least 3 meters

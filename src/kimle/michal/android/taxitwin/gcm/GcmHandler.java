@@ -2,12 +2,10 @@ package kimle.michal.android.taxitwin.gcm;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.content.ComponentName;
 import android.content.Context;
 import static android.content.Context.ACCOUNT_SERVICE;
 import static android.content.Context.LOCATION_SERVICE;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationManager;
@@ -58,7 +56,6 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     }
 
     public void locationChanged(Location location) {
-        Log.d(LOG, "in locationChanged");
         if (location != null) {
             Bundle data = new Bundle();
             data.putString(GCM_DATA_START_LATITUDE, String.valueOf(location.getLatitude()));
@@ -88,7 +85,6 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
     }
 
     public void sendNewOffer() {
-        Log.d(LOG, "in sendNewOffer");
         if (!hasAllData() || !ServicesManagement.checkServices(context)) {
             Log.w(LOG, "cannot send new offer - missing data or service");
             return;
@@ -115,12 +111,9 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
 
         gcmConnector.send(data);
         TaxiTwinApplication.setUserState(UserState.SUBSCRIBED);
-
-        Log.d(LOG, "sending subscribe: " + data);
     }
 
     public void onSharedPreferenceChanged(SharedPreferences pref, String key) {
-        Log.d(LOG, "in onSharedPreferenceChanged");
         if (key.equals(context.getResources().getString(R.string.pref_address))) {
 
             Bundle data = new Bundle();
@@ -161,8 +154,6 @@ public class GcmHandler implements SharedPreferences.OnSharedPreferenceChangeLis
 
         data.putString(GCM_DATA_TYPE, GCM_DATA_TYPE_MODIFY);
         gcmConnector.send(data);
-
-        Log.d(LOG, "sending changes: " + data);
     }
 
     private String getUserName() {

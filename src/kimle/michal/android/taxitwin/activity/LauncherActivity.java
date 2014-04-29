@@ -30,7 +30,6 @@ public class LauncherActivity extends Activity {
             case OWNER:
                 intent = new Intent(this, MyTaxiTwinActivity.class);
                 intent.addFlags(FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK);
-                //intent.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_OWNER);
                 break;
             default:
                 intent = new Intent(this, MainActivity.class);

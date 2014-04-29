@@ -28,9 +28,7 @@ import kimle.michal.android.taxitwin.services.ServicesManagement;
 
 public class ResponsesActivity extends ListActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static final String LOG = "ResponsesActivity";
     private SimpleCursorAdapter adapter;
-    //public static final int RESPONSE_DETAIL = 20000;
     public static final String CATEGORY_RESPONSE_DATA_CHANGED = "kimle.michal.android.taxitwin.CATEGORY_RESPONSE_DATA_CHANGED";
     public static final int RESULT_ACCEPT_RESPONSE = 74;
     public static final int RESULT_DECLINE_RESPONSE = 75;

@@ -243,7 +243,6 @@ public class ResponseDetailActivity extends Activity {
         gcmHandler.acceptResponse(taxitwinId);
 
         Intent intent = new Intent(this, MyTaxiTwinActivity.class);
-        //intent.addCategory(MyTaxiTwinActivity.CATEGORY_TAXITWIN_OWNER);
         TaxiTwinApplication.setUserState(UserState.OWNER);
         intent.addFlags(FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);

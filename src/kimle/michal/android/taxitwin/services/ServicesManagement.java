@@ -15,7 +15,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import kimle.michal.android.taxitwin.dialog.alert.GPSAlertDialogFragment;
@@ -26,7 +25,6 @@ import static kimle.michal.android.taxitwin.gcm.GcmIntentService.ACTION_TAXITWIN
 
 public class ServicesManagement {
 
-    private static final String LOG = "ServicesManagement";
     public static final String CATEGORY_GPS_ENABLED = "kimle.michal.android.taxitwin.CATEGORY_GPS_ENABLED";
     public static final String CATEGORY_GPS_DISABLED = "kimle.michal.android.taxitwin.CATEGORY_GPS_DISABLED";
     public static final String CATEGORY_NETWORK_ENABLED = "kimle.michal.android.taxitwin.CATEGORY_NETWORK_ENABLED";
@@ -45,7 +43,6 @@ public class ServicesManagement {
             }
 
             public void onProviderEnabled(String provider) {
-                Log.d(LOG, "in onProviderEnabled, provider: " + provider);
                 if (provider.equals(LocationManager.GPS_PROVIDER)) {
                     Intent intent = new Intent(ACTION_TAXITWIN);
                     intent.addCategory(CATEGORY_GPS_ENABLED);
@@ -54,7 +51,6 @@ public class ServicesManagement {
             }
 
             public void onProviderDisabled(String provider) {
-                Log.d(LOG, "in onProviderDisabled, provider: " + provider);
                 if (provider.equals(LocationManager.GPS_PROVIDER)) {
                     Intent intent = new Intent(ACTION_TAXITWIN);
                     intent.addCategory(CATEGORY_GPS_DISABLED);
